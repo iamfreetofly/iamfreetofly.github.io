@@ -21,22 +21,23 @@ if ADDON.getSetting('ga_visitor')=='':
     
 PATH = "TVBdo"  #<---- PLUGIN NAME MINUS THE "plugin.video"          
 UATRACK="UA-41910477-1" #<---- GOOGLE ANALYTICS UA NUMBER   
-VERSION = "1.0.6" #<---- PLUGIN VERSION
+VERSION = "1.0.10" #<---- PLUGIN VERSION
 #domainlist = [" ", " ", " "]
 #domain = domainlist[int(ADDON.getSetting('domainurl'))]
 def __init__(self):
     self.playlist=sys.modules["__main__"].playlist
 def HOME():
         #addDir('Search',' ',4,' ')
-        addDir('TVB Dramas','http://www.tvbdo.com/category/tvb-drama/',2,'')
-        addDir('HK Movies','http://www.tvbdo.com/category/movies/',14,'')
+        addDir('Recent Episodes','http://tvbdo.com',14,'')
+        addDir('TVB Dramas','http://tvbdo.com/show/country/hong-kong',2,'')
+        #addDir('HK Movies','http://www.tvbdo.com/category/movies/',14,'')
         addDir('HK Variety Shows','http://www.tvbdo.com/category/hk-variety/',2,'')
-        addDir('HK On-Going Variety Shows','http://www.tvbdo.com/category/on-going-variety-shows/',2,'')
-        addDir('HKTV','http://www.tvbdo.com/category/hktv/',2,'')
-        addDir('Mainland Dramas','http://www.tvbdo.com/category/mainland-dramas/',2,'')
-        addDir('Planet Discovery','http://www.tvbdo.com/category/planet-discovery/',14,'')
+        #addDir('HK On-Going Variety Shows','http://www.tvbdo.com/category/on-going-variety-shows/',2,'')
+        #addDir('HKTV','http://www.tvbdo.com/category/hktv/',2,'')
+        addDir('Mainland Dramas','http://tvbdo.com/shows/country/china',2,'')
+        addDir('Taiwan Dramas','http://tvbdo.com/shows/country/china',2,'')
+        addDir('Movies','http://tvbdo.com/movies',2,'')
 
-        
 def INDEX(url,newmode):
     #try:
         try:
@@ -59,28 +60,40 @@ def INDEX(url,newmode):
             link = link.encode("UTF-8")
         except: pass
 
-        vidmode=5
+        vidmode=18
         
         if(newmode==13):
                 vidmode=10
         elif(newmode==14):
                 vidmode=11
         
-        newlink = ''.join(link.splitlines()).replace('\t','').replace('\'','"').replace('&#8217;','\'')
+        newlink = ''.join(link.splitlines()).replace('\t','').replace('\'','"').replace('&#8217;','\'').replace('http://tvbdo.com','http://www.tvbdo.com')
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
         
-        match=re.compile('<img src="(.+?)"[^>]*>(.+?)<h2[^>]*>[^>]*<a href="(.+?)"[^>]*>(.+?)</a>[^>]*</h2>').findall(listcontent[0])
+        if(newmode==14):
+            match=re.compile('<li>[^>]*<a href="(.+?)"[^>]*>(.+?)</a>').findall(listcontent[0])
 
-        for (vimg,vtmp,vurl,vname) in match:
-            vname = vname.replace('&#8211;','-')
-            try:
-                  addDir(vname,url_fix(vurl),vidmode,vimg)
-            except:
-                  addDir(vname.decode("utf-8"),url_fix(vurl),vidmode,vimg)
+            for (vurl,vname) in match:
+                vname = vname.replace('&#8211;','-').replace('&#8217;','\'')
+                try:
+                    addDir(vname,url_fix(vurl),15,"")
+                except:
+                    addDir(vname.decode("utf-8"),url_fix(vurl),15,"")
+            
+        else:
+            match=re.compile('<img src="(.+?)"[^>]*>(.+?)<h2[^>]*>[^>]*<a href="(.+?)"[^>]*>(.+?)</a>[^>]*</h2>').findall(listcontent[0])
+            
+            for (vimg,vtmp,vurl,vname) in match:
+                vname = vname.replace('&#8211;','-')
+                try:
+                      addDir(vname,url_fix(vurl),vidmode,vimg)
+                except:
+                      addDir(vname.decode("utf-8"),url_fix(vurl),vidmode,vimg)
                   
-        pagecontent=re.compile('<div class="loop-nav-inner">(.+?)</div>').findall(newlink)        
+        pagecontent=re.compile('<div class="loop-nav-inner">(.+?)</div>').findall(newlink)
+
         if(len(pagecontent)>0):
-                match5=re.compile('<a [^>]* href="(.+?)">(.+?)</a>').findall(pagecontent[0])
+                match5=re.compile('<a href="(.+?)" [^>]*>(.+?)</a>').findall(pagecontent[0])
                 for (vurl,vname) in match5:
                     vname = vname.replace('&laquo;','<<').replace('&raquo;','>>')
                     try:
@@ -148,8 +161,8 @@ def Parts(url,name):
         except: link = GetContent(url)
 
         link = ''.join(link.splitlines()).replace('\'','"').replace('\t','').replace('\\','')
-        print ("============================ POSTING abclink ============================")
-        print link
+##        print ("============================ POSTING abclink ============================")
+##        print link
 
         partlist=re.compile('function chsplayer(.+?)\}\)').findall(urllib.unquote(link).decode('utf-8'))
         partlist2=re.compile('function engplayer(.+?)\}\)').findall(urllib.unquote(link).decode('utf-8'))
@@ -158,44 +171,57 @@ def Parts(url,name):
 
         if(len(partlist)<1):
             altpartlist=re.compile('Source 1(.+?)Source 1').findall(urllib.unquote(link).decode('utf-8'))
-            print ("============================ POSTING altpartlist ============================")
-            print (altpartlist)
+##            print ("============================ POSTING altpartlist ============================")
+##            print (altpartlist)
 
             if(altpartlist):
                 altpartlistlink=re.compile('href="(.+?)"').findall(altpartlist[0])
-                print ("============================ POSTING altpartlistlink ============================")
-                print (altpartlistlink)
+##                print ("============================ POSTING altpartlistlink ============================")
+##                print (altpartlistlink)
                 for vlink in altpartlistlink:
                     altParts(vlink,name)
 
             altpartlist2=re.compile('Source 1 Chinese</b></span><iframe width=(.+?)>').findall(urllib.unquote(link).decode('utf-8'))
-            print ("============================ POSTING altpartlist2 ============================")
-            print (altpartlist2)
+##            print ("============================ POSTING altpartlist2 ============================")
+##            print (altpartlist2)
 
             if(altpartlist2):
                 altpartlistlink2=re.compile('src="(.+?)"').findall(altpartlist2[0])
-                print ("============================ POSTING altpartlistlink2 ============================")
-                print (altpartlistlink2)
+##                print ("============================ POSTING altpartlistlink2 ============================")
+##                print (altpartlistlink2)
                 for vlink in altpartlistlink2:
                     videomega(vlink,name)
 
             altpartlist3=re.compile('Source 1 English</b></span><iframe width=(.+?)>').findall(urllib.unquote(link).decode('utf-8'))
-            print ("============================ POSTING altpartlist3 ============================")
-            print (altpartlist3)
+##            print ("============================ POSTING altpartlist3 ============================")
+##            print (altpartlist3)
 
             if(altpartlist3):
                 altpartlistlink3=re.compile('src="(.+?)"').findall(altpartlist3[0])
-                print ("============================ POSTING altpartlistlink2 ============================")
-                print (altpartlistlink3)
+##                print ("============================ POSTING altpartlistlink2 ============================")
+##                print (altpartlistlink3)
                 for vlink in altpartlistlink3:
                     name = name + ' (English subs)'
-                    videomega(vlink,name) 
+                    videomega(vlink,name)
+
+            altpartlist4=re.compile('Source 1 LQ</b></span><iframe width=(.+?)>').findall(urllib.unquote(link).decode('utf-8'))
+##            print ("============================ POSTING altpartlist4 ============================")
+##            print (altpartlist3)
+
+            if(altpartlist4):
+                altpartlistlink4=re.compile('src="(.+?)"').findall(altpartlist4[0])
+##                print ("============================ POSTING altpartlistlink4 ============================")
+##                print (altpartlistlink4)
+                for vlink in altpartlistlink4:
+                    name = name + ' (LQ)'
+                    videomega(vlink,name)
+
                
         partctr=0
         if(len(partlist)>0):
                partlink=re.compile('sources(.+?)Part').findall(partlist[0])
-               print ("============================ POSTING partlink ============================")
-               print (partlink)
+##               print ("============================ POSTING partlink ============================")
+##               print (partlink)
 
                #no parts
                if(len(partlink) == 1):
@@ -216,8 +242,8 @@ def Parts(url,name):
             partctr2=0
             if(len(partlist2)>0):
                    partlink2=re.compile('sources(.+?)Part').findall(partlist2[0])
-                   print ("============================ POSTING partlink2 ============================")
-                   print (partlink2)
+##                   print ("============================ POSTING partlink2 ============================")
+##                   print (partlink2)
 
                    #no parts (eng subs)
                    if(len(partlink2) == 1):
@@ -250,8 +276,8 @@ def videomega(url,name):
                 return
         encodedurl=re.compile('unescape.+?"(.+?)"').findall(link)
         teste=urllib.unquote(encodedurl[0])
-        print ("============================ POSTING teste ============================")
-        print (teste)
+##        print ("============================ POSTING teste ============================")
+##        print (teste)
         
         mega=re.compile('file: "(.+?)"').findall(teste)
         for url in mega:
@@ -265,8 +291,8 @@ def videomega(url,name):
 
 
 def altParts(url,name):
-        print ("============================ POSTING alturl ============================")
-        print (url)
+##        print ("============================ POSTING alturl ============================")
+##        print (url)
         hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
@@ -289,8 +315,8 @@ def altParts(url,name):
         partctr=0
         if(len(partlist)>0):
                partlink=re.compile('sources(.+?)Part').findall(partlist[0])
-               print ("============================ POSTING partlink ============================")
-               print (partlink)
+##               print ("============================ POSTING partlink ============================")
+##               print (partlink)
 
                #no parts
                if(len(partlink) == 1):
@@ -311,8 +337,8 @@ def altParts(url,name):
             partctr2=0
             if(len(partlist2)>0):
                    partlink2=re.compile('sources(.+?)Part').findall(partlist2[0])
-                   print ("============================ POSTING partlink2 ============================")
-                   print (partlink2)
+##                   print ("============================ POSTING partlink2 ============================")
+##                   print (partlink2)
 
                    #no parts (eng subs)
                    if(len(partlink2) == 1):
@@ -365,12 +391,14 @@ def Episodes(url,name,newmode):
         try:
             link = link.encode("UTF-8")
         except: pass
-        newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com')
+        newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('/show','http://www.tvbdo.com/show')
         
-        findEpisodeLink = re.compile('<h2><strong><a href="(.+?)">(.+?)</a>').findall(newlink)
+        #findEpisodeLink = re.compile('<h2><strong><a href="(.+?)">(.+?)</a>').findall(newlink)
 
-        print ("============================ POSTING newlink ============================")
-        print newlink
+	findEpisodeLink = re.compile('<span class="episode_loop"><a href="(.+?)">(.+?)</a>').findall(newlink)
+
+##        print ("============================ POSTING newlink ============================")
+##        print newlink
 
         if findEpisodeLink:
             for (vurl,tmp) in findEpisodeLink:
@@ -386,11 +414,6 @@ def Episodes(url,name,newmode):
 
 def findEpisodes(url,name,newmode):
     #try:
-        try:
-            print ("============================ POSTING url ============================")
-            print url
-            #url = urllib.unquote(url.encode('utf-8'))
-        except: pass
         hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
@@ -408,26 +431,32 @@ def findEpisodes(url,name,newmode):
             link = link.encode("UTF-8")
         except: pass
         
-        newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com')
+        newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('/show','http://www.tvbdo.com/show')
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
+	#print ("============================ POSTING listcontent ============================")
+        #print listcontent
 
         if(newmode==5):
                 vidmode=11
         else:
-                vidmode=9
+                vidmode=15
 
-        match=re.compile('<a class="clip-link" data-id="(.+?)" title="(.+?)" href="(.+?)">').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+        #match=re.compile('<a class="clip-link" data-id="(.+?)" title="(.+?)" href="(.+?)">').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
 
-##        print ("============================ POSTING match ============================")
-##        print match
+	match=re.compile('<span class="episode_loop">(.+?)<a href="(.+?)">(.+?)</a>').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+
+
+	#print ("============================ POSTING match ============================")
+        #print match
         
-        for (vtmp,vname,vurl) in match:
+        for (vtmp,vurl,vname) in match:
             vname = vname.replace('&#8211;','-').replace('&#8217;','\'')
             try:
-                addDir(vname,url_fix(vurl),vidmode,"")
+                addDir(name + ' - ' + vname,url_fix(vurl),vidmode,"")
             except:
-                addDir(vname.decode("utf-8"),url_fix(vurl),vidmode,"")
+                addDir(name + ' - ' + vname.decode("utf-8"),url_fix(vurl),vidmode,"")
+	
 
         pagecontent=re.compile('<div class="loop-nav-inner">(.+?)</div>').findall(newlink)        
         if(len(pagecontent)>0):
@@ -484,7 +513,7 @@ def Episodes2(url,name,newmode):
 
 
 def PlayUrlSource(url,name):
-    #try:
+    try:
 
         GA("LoadVideo","NA")
         #xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link into XBMC Media Player,5000)")
@@ -507,19 +536,88 @@ def PlayUrlSource(url,name):
         try:
             link = link.encode("UTF-8")
         except: pass
-        newlink = ''.join(link.splitlines()).replace('\t','').replace('href="/file','href="http://www.putlocker.com/file')
+        #newlink = ''.join(link.splitlines()).replace('\t','').replace('href="/file','href="http://www.putlocker.com/file')
+ 
+
+	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('streamvib.com','www.streamvib.com')
+
+        listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
+##	print ("============================ POSTING listcontent ============================")
+##      print listcontent
+
+
+        match=re.compile('jwplayer(.+?)file: "(.+?)"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))        
+
+##        print ("============================ POSTING match ============================")
+##        print match
+
+        for (vtmp,vurl) in match:
+            try:            
+                addDir2('Watch ' + name,vurl,20,"")
+            except:
+                addDir2('Watch ' + name.decode("utf-8"),vurl,20,"")
+
+
+#       english subs
+        match2=re.compile('Switch to:(.+?)English Sub').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+        if match2:
+            engURL = url + '?mirror=2'
+            PlayUrlSource2(engURL,name)
+
+##        for (vtmp,vurl) in match:
+##            xbmcPlayer = xbmc.Player()
+##            xbmcPlayer.play(vurl)
         
-        match = re.compile('<div id="file_title" [^>]*><a href="(.+?)" [^>]*><strong>').findall(newlink)
+    except:
+        d = xbmcgui.Dialog()
+        d.ok(url,"Sorry, the content has been removed.","Please visit site to verify.")
+            
 
-        #print ("============================ POSTING match ============================")
-        #print match
+def PlayUrlSource2(url,name):
+    try:
 
-        for (vurl) in match:
+        GA("LoadVideo","NA")
+        #xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link into XBMC Media Player,5000)")
+        try:
+            url = urllib.unquote(url.encode('utf-8'))
+        except: pass
+        hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+               'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+               'Accept-Encoding': 'none',
+               'Accept-Language': 'en-US,en;q=0.8',
+               'Connection': 'keep-alive'}
+        try:
+            req = urllib2.Request(url, headers=hdr)
+            response = urllib2.urlopen(req)
+            link=response.read()
+            response.close()
+        except: link = GetContent(url)
+        
+        try:
+            link = link.encode("UTF-8")
+        except: pass
+
+	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('streamvib.com','www.streamvib.com')
+
+        listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
+
+        match=re.compile('jwplayer(.+?)file: "(.+?)"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+
+        for (vtmp,vurl) in match:
             try:
-                ResolveUrl(vurl,name)
-            except: pass
+                addDir2('Watch ' + name + ' (English subs)',vurl,20,"")
+            except:
+                addDir2('Watch ' + name.decode("utf-8") + ' (English subs)',vurl,20,"")
+
+##        for (vtmp,vurl) in match:
+##            xbmcPlayer = xbmc.Player()
+##            xbmcPlayer.play(vurl)
         
-    #except: pass 
+    except:
+        d = xbmcgui.Dialog()
+        d.ok(url,"Sorry, the content has been removed.","Please visit site to verify.")
+
 
 
 def ResolveUrl(url,name):
@@ -600,19 +698,26 @@ def GetContent(url):
        d = xbmcgui.Dialog()
        d.ok(url,"Can't Connect to site",'Try again in a moment')
 
-def playVideo(videoType,videoId):
-    url = ""
-    #print videoType + '=' + videoId
-    if (videoType == "youtube"):
-        url = 'plugin://plugin.video.youtube?path=/root/video&action=play_video&videoid=' + videoId.replace('?','')
-        xbmc.executebuiltin("xbmc.PlayMedia("+url+")")
-    elif (videoType == "vimeo"):
-        url = 'plugin://plugin.video.vimeo/?action=play_video&videoID=' + videoId
-    elif (videoType == "tudou"):
-        url = 'plugin://plugin.video.tudou/?mode=3&url=' + videoId
-    else:
-        xbmcPlayer = xbmc.Player()
-        xbmcPlayer.play(videoId)
+##def playVideo(videoType,videoId):
+##    url = ""
+##    #print videoType + '=' + videoId
+##    if (videoType == "youtube"):
+##        url = 'plugin://plugin.video.youtube?path=/root/video&action=play_video&videoid=' + videoId.replace('?','')
+##        xbmc.executebuiltin("xbmc.PlayMedia("+url+")")
+##    elif (videoType == "vimeo"):
+##        url = 'plugin://plugin.video.vimeo/?action=play_video&videoID=' + videoId
+##    elif (videoType == "tudou"):
+##        url = 'plugin://plugin.video.tudou/?mode=3&url=' + videoId
+##    else:
+##        xbmcPlayer = xbmc.Player()
+##        xbmcPlayer.play(videoId)
+
+
+def playVideo(url,name):
+    GA("playVideo",name)
+    xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link into XBMC Media Player,5000)")
+    xbmcPlayer = xbmc.Player()
+    xbmcPlayer.play(url)
 
 def loadVideos(url,name):
     try:
@@ -620,12 +725,12 @@ def loadVideos(url,name):
 
        links=url.split(';#')
 
-       print ("============================ POSTING links ============================")
-       print links
+##       print ("============================ POSTING links ============================")
+##       print links
 
        framecontent = url
-       print ("============================ POSTING framecontent ============================")
-       print framecontent
+##       print ("============================ POSTING framecontent ============================")
+##       print framecontent
 
 ##       vlinkplayList=''
 ##       vlinkplayList2=''
@@ -662,28 +767,28 @@ def loadVideos(url,name):
 ##                   vlinkplayList2 = vlinkplayList2 + vvlink2 +";#"
 
        embedlink = re.compile('"file":"(.+?)"').findall(framecontent)
-       print ("============================ POSTING embedlink ============================")
-       print embedlink
+##       print ("============================ POSTING embedlink ============================")
+##       print embedlink
 
        qctr=0
        print ("============================ POSTING length links ============================")
        print len(links)
        if(len(links) < 2):
            for vname in embedlink:
-               print ("============================ POSTING vname ============================")
-               print vname
+##               print ("============================ POSTING vname ============================")
+##               print vname
                #if(len(embedlink) > 0):
                addLink(qualityval[qctr],urllib.unquote(embedlink[qctr]),8,"","")
                qctr=qctr+1
                                                   
        elif(len(links) > 1):
            newrange = len(links) - 1
-           print ("============================ POSTING newrange ============================")
-           print newrange
+##           print ("============================ POSTING newrange ============================")
+##           print newrange
 
            framecontent2 = url.split(';#')
-           print ("============================ POSTING framecontent2 ============================")
-           print framecontent2
+##           print ("============================ POSTING framecontent2 ============================")
+##           print framecontent2
 
            a=0
            b=1
@@ -823,12 +928,18 @@ def checkGA():
                     
 def send_request_to_google_analytics(utm_url):
     ua='Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
+##    ua='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'
+
     import urllib2
     try:
         req = urllib2.Request(utm_url, None,
                                     {'User-Agent':ua}
                                      )
         response = urllib2.urlopen(req).read()
+        print "============================ POSTING UA response ============================"
+##        print (response)
+##        print "============================ POSTING UA utm_url ============================"
+##        print (utm_url)  
     except:
         print ("GA fail: %s" % utm_url)         
     return response
@@ -1077,6 +1188,10 @@ elif mode==16:
 elif mode==17:
        findEpisodes(url,name,5)
 elif mode==18:
-       findEpisodes(url,name,'')
+       findEpisodes(url,name,mode)
+elif mode==19:
+       findEpisodes2(url,name,mode)
+elif mode==20:
+        playVideo(url,name)
 
 xbmcplugin.endOfDirectory(int(sysarg))

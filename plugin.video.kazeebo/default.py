@@ -14,12 +14,12 @@ from urlparse import urljoin
 
 import datetime
 import time
-ADDON = xbmcaddon.Addon(id='plugin.video.tvbdo')
+ADDON = xbmcaddon.Addon(id='plugin.video.kazeebo')
 if ADDON.getSetting('ga_visitor')=='':
     from random import randint
     ADDON.setSetting('ga_visitor',str(randint(0, 0x7fffffff)))
     
-PATH = "TVBdo"  #<---- PLUGIN NAME MINUS THE "plugin.video"          
+PATH = "Kazeebo"  #<---- PLUGIN NAME MINUS THE "plugin.video"          
 UATRACK="UA-41910477-1" #<---- GOOGLE ANALYTICS UA NUMBER   
 VERSION = "1.0.6" #<---- PLUGIN VERSION
 #domainlist = [" ", " ", " "]
@@ -28,13 +28,9 @@ def __init__(self):
     self.playlist=sys.modules["__main__"].playlist
 def HOME():
         #addDir('Search',' ',4,' ')
-        addDir('TVB Dramas','http://www.tvbdo.com/category/tvb-drama/',2,'')
-        addDir('HK Movies','http://www.tvbdo.com/category/movies/',14,'')
-        addDir('HK Variety Shows','http://www.tvbdo.com/category/hk-variety/',2,'')
-        addDir('HK On-Going Variety Shows','http://www.tvbdo.com/category/on-going-variety-shows/',2,'')
-        addDir('HKTV','http://www.tvbdo.com/category/hktv/',2,'')
-        addDir('Mainland Dramas','http://www.tvbdo.com/category/mainland-dramas/',2,'')
-        addDir('Planet Discovery','http://www.tvbdo.com/category/planet-discovery/',14,'')
+        addDir('TVB Dramas','http://www.kazeebo.com/about-2/',2,'')
+        addDir('HK Variety/News','http://www.kazeebo.com/hk-varietynews/',2,'')
+        #addDir('TVB Live TV','http://www.tvbdo.com/category/on-going-variety-shows/',2,'')
 
         
 def INDEX(url,newmode):

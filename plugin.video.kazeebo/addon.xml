@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<addon id="plugin.video.tvbdo" version="1.0.9" name="TVBdo.com" provider-name="Iamfreetofly">
+<addon id="plugin.video.tvbdo" version="1.0.9" name="Kazeebo.com" provider-name="Iamfreetofly">
   <requires>
     <import addon="xbmc.python" version="2.0" />
     <import addon="script.module.simplejson" />
@@ -11,7 +11,7 @@
   </extension>
   <extension point="xbmc.addon.metadata">
     <summary>TVBdo.com</summary>
-    <description>Watch TVBdo.com (HK - Cantonese) Videos</description>
+    <description>Watch Kazeebo.com (HK - Cantonese) Videos</description>
     <platform>all</platform>
   </extension>
 </addon>
