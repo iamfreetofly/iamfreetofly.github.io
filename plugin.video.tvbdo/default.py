@@ -81,7 +81,7 @@ def INDEX(url,newmode):
                     addDir(vname.decode("utf-8"),url_fix(vurl),15,"")
             
         else:
-            match=re.compile('<img src="(.+?)"[^>]*>(.+?)<h2[^>]*>[^>]*<a href="(.+?)"[^>]*>(.+?)</a>[^>]*</h2>').findall(listcontent[0])
+            match=re.compile('<img src="(.+?)"[^>]*>(.+?)<h2>[^>]*>[^>]*<a href="(.+?)"[^>]*>(.+?)</a>[^>]*</h2>').findall(listcontent[0])
             
             for (vimg,vtmp,vurl,vname) in match:
                 vname = vname.replace('&#8211;','-')
