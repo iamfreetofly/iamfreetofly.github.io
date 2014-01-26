@@ -6,7 +6,7 @@ import os,time,base64,logging
 from t0mm0.common.net import Net
 import xml.dom.minidom
 import json
-import urlresolver
+##import urlresolver
 import xbmcaddon,xbmcplugin,xbmcgui
 import base64
 import xbmc
@@ -447,7 +447,7 @@ def findEpisodes(url,name,newmode):
 
         #match=re.compile('<a class="clip-link" data-id="(.+?)" title="(.+?)" href="(.+?)">').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
 
-	match=re.compile('<span class="episode_loop">(.+?)<a href="(.+?)">(.+?)</a>').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+	match=re.compile('<span class="episode_loop">(.+?)<a href="(.+?)">(.+?)</a>').findall(urllib.unquote(listcontent[0]))
 
 
 	#print ("============================ POSTING match ============================")
