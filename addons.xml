@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addons>
+<addon id="plugin.video.tvbdo" version="1.0.9" name="Kazeebo.com" provider-name="Iamfreetofly">
+  <requires>
+    <import addon="xbmc.python" version="2.0" />
+    <import addon="script.module.simplejson" />
+    <import addon="script.module.t0mm0.common" version="1.1.0" />
+    <import addon="script.module.urlresolver" />
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="default.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary>TVBdo.com</summary>
+    <description>Watch Kazeebo.com (HK - Cantonese) Videos</description>
+    <platform>all</platform>
+  </extension>
+</addon>
+
 <addon
   id="plugin.video.LaosTv"
   version="1.0.5"
