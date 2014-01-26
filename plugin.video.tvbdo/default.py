@@ -29,13 +29,13 @@ def __init__(self):
 def HOME():
         #addDir('Search',' ',4,' ')
         addDir('Recent Episodes','http://tvbdo.com',14,'')
-        addDir('TVB Dramas','http://tvbdo.com/show/country/hong-kong',2,'')
+        addDir('TVB Dramas','http://tvbdo.com/hong-kong-drama',2,'')
         #addDir('HK Movies','http://www.tvbdo.com/category/movies/',14,'')
         addDir('HK Variety Shows','http://www.tvbdo.com/category/hk-variety/',2,'')
         #addDir('HK On-Going Variety Shows','http://www.tvbdo.com/category/on-going-variety-shows/',2,'')
         #addDir('HKTV','http://www.tvbdo.com/category/hktv/',2,'')
         addDir('Mainland Dramas','http://tvbdo.com/shows/country/china',2,'')
-        addDir('Taiwan Dramas','http://tvbdo.com/shows/country/china',2,'')
+        addDir('Taiwan Dramas','http://tvbdo.com/shows/country/taiwan',2,'')
         addDir('Movies','http://tvbdo.com/movies',2,'')
 
 def INDEX(url,newmode):
@@ -81,7 +81,7 @@ def INDEX(url,newmode):
                     addDir(vname.decode("utf-8"),url_fix(vurl),15,"")
             
         else:
-            match=re.compile('<img src="(.+?)"[^>]*>(.+?)<h2>[^>]*>[^>]*<a href="(.+?)"[^>]*>(.+?)</a>[^>]*</h2>').findall(listcontent[0])
+            match=re.compile('<img src="(.+?)"[^>]*>(.+?)<h2[^>]*>[^>]*<a href="(.+?)"[^>]*>(.+?)</a>[^>]*</h2>').findall(listcontent[0])
             
             for (vimg,vtmp,vurl,vname) in match:
                 vname = vname.replace('&#8211;','-')
