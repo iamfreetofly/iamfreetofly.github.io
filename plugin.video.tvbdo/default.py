@@ -69,6 +69,9 @@ def INDEX(url,newmode):
         
         newlink = ''.join(link.splitlines()).replace('\t','').replace('\'','"').replace('&#8217;','\'').replace('http://tvbdo.com','http://www.tvbdo.com')
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
+
+        print "============================ POSTING listcontent ============================"
+        print (listcontent)
         
         if(newmode==14):
             match=re.compile('<li>[^>]*<a href="(.+?)"[^>]*>(.+?)</a>').findall(listcontent[0])
