@@ -458,7 +458,7 @@ def findEpisodes(url,name,newmode):
             try:
                 addDir(name + ' - ' + vname,url_fix(vurl),vidmode,"")
             except:
-                addDir(name + ' - ' + vname.decode("utf-8"),url_fix(vurl),vidmode,"")
+                addDir(name.decode("utf-8") + ' - ' + vname.decode("utf-8"),url_fix(vurl),vidmode,"")
 	
 
         pagecontent=re.compile('<div class="loop-nav-inner">(.+?)</div>').findall(newlink)        
