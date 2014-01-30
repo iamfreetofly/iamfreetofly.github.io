@@ -70,8 +70,8 @@ def INDEX(url,newmode):
         newlink = ''.join(link.splitlines()).replace('\t','').replace('\'','"').replace('&#8217;','\'').replace('http://tvbdo.com','http://www.tvbdo.com')
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
 
-        print "============================ POSTING listcontent ============================"
-        print (listcontent)
+##        print "============================ POSTING listcontent ============================"
+##        print (listcontent)
         
         if(newmode==14):
             match=re.compile('<li>[^>]*<a href="(.+?)"[^>]*>(.+?)</a>').findall(listcontent[0])
@@ -542,23 +542,30 @@ def PlayUrlSource(url,name):
         #newlink = ''.join(link.splitlines()).replace('\t','').replace('href="/file','href="http://www.putlocker.com/file')
  
 
-	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('streamvib.com','www.streamvib.com')
+	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('http://198.23.71.123/','http://www.streamvib.com/')
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
 ##	print ("============================ POSTING listcontent ============================")
 ##      print listcontent
 
 
-        match=re.compile('jwplayer(.+?)file: "(.+?)"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))        
+        matchSD=re.compile('file: "(.+?)",label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+        matchHD=re.compile('file: "(.+?)",label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
 
 ##        print ("============================ POSTING match ============================")
 ##        print match
 
-        for (vtmp,vurl) in match:
+        for (vtmp,vurl) in matchSD:
             try:            
-                addDir2('Watch ' + name,vurl,20,"")
+                addDir2('Watch ' + name + ' - 360p SD,vurl,20,"")
             except:
-                addDir2('Watch ' + name.decode("utf-8"),vurl,20,"")
+                addDir2('Watch ' + name.decode("utf-8") + ' - 360p SD,vurl,20,"")
+                        
+        for (vtmp,vurl) in matchHD:
+            try:            
+                addDir2('Watch ' + name + ' - 720p HD,vurl,20,"")
+            except:
+                addDir2('Watch ' + name.decode("utf-8") + ' - 720p HD,vurl,20,"")
 
 
 #       english subs
@@ -605,13 +612,20 @@ def PlayUrlSource2(url,name):
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
 
-        match=re.compile('jwplayer(.+?)file: "(.+?)"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+        matchSD=re.compile('file: "(.+?)",label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+        matchHD=re.compile('file: "(.+?)",label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
 
-        for (vtmp,vurl) in match:
+        for (vtmp,vurl) in matchSD:
             try:
-                addDir2('Watch ' + name + ' (English subs)',vurl,20,"")
+                addDir2('Watch ' + name + ' (English subs) - 360p SD',vurl,20,"")
             except:
-                addDir2('Watch ' + name.decode("utf-8") + ' (English subs)',vurl,20,"")
+                addDir2('Watch ' + name.decode("utf-8") + ' (English subs) - 360p SD',vurl,20,"")
+
+        for (vtmp,vurl) in matchHD:
+            try:
+                addDir2('Watch ' + name + ' (English subs) - 720p HD',vurl,20,"")
+            except:
+                addDir2('Watch ' + name.decode("utf-8") + ' (English subs) - 720p HD',vurl,20,"")
 
 ##        for (vtmp,vurl) in match:
 ##            xbmcPlayer = xbmc.Player()
