@@ -545,23 +545,23 @@ def PlayUrlSource(url,name):
 	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('http://198.23.71.123/','http://www.streamvib.com/')
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
-	print ("============================ POSTING listcontent ============================")
-	print listcontent
+##	print ("============================ POSTING listcontent ============================")
+##	print listcontent
 
 
-        matchSD=re.compile('file: "(.+?)",label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
-        matchHD=re.compile('file: "(.+?)",label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
+        matchSD=re.compile('file: "(.+?)",(.+?)label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+        matchHD=re.compile('label: "SD" [^>]* file: "(.+?)",(.+?)label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
 
 ##        print ("============================ POSTING match ============================")
 ##        print match
 
-        for (vurl) in matchSD:
+        for (vurl,vtmp) in matchSD:
             try:            
                 addDir2('Watch ' + name + ' - 360p SD',vurl,20,"")
             except:
                 addDir2('Watch ' + name.decode("utf-8") + ' - 360p SD',vurl,20,"")
                         
-        for (vurl) in matchHD:
+        for (vurl,vtmp) in matchHD:
             try:            
                 addDir2('Watch ' + name + ' - 720p HD',vurl,20,"")
             except:
@@ -612,16 +612,16 @@ def PlayUrlSource2(url,name):
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
 
-        matchSD=re.compile('file: "(.+?)",label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
-        matchHD=re.compile('file: "(.+?)",label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
+        matchSD=re.compile('file: "(.+?)",(.+?)label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+        matchHD=re.compile('label: "SD" [^>]* file: "(.+?)",(.+?)label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
 
-        for (vurl) in matchSD:
+        for (vurl,vtmp) in matchSD:
             try:
                 addDir2('Watch ' + name + ' (English subs) - 360p SD',vurl,20,"")
             except:
                 addDir2('Watch ' + name.decode("utf-8") + ' (English subs) - 360p SD',vurl,20,"")
 
-        for (vurl) in matchHD:
+        for (vurl,vtmp) in matchHD:
             try:
                 addDir2('Watch ' + name + ' (English subs) - 720p HD',vurl,20,"")
             except:
