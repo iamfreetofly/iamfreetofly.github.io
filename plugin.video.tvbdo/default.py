@@ -549,8 +549,8 @@ def PlayUrlSource(url,name):
 ##      print listcontent
 
 
-        matchSD=re.compile('file: "(.+?)",label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
-        matchHD=re.compile('file: "(.+?)",label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
+        matchSD=re.compile('file: "(.+?)",[^>]*label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+        matchHD=re.compile('file: "(.+?)",[^>]*label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
 
 ##        print ("============================ POSTING match ============================")
 ##        print match
@@ -608,12 +608,12 @@ def PlayUrlSource2(url,name):
             link = link.encode("UTF-8")
         except: pass
 
-	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('streamvib.com','www.streamvib.com')
+	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('http://198.23.71.123/','www.streamvib.com/')
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
 
-        matchSD=re.compile('file: "(.+?)",label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
-        matchHD=re.compile('file: "(.+?)",label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
+        matchSD=re.compile('file: "(.+?)",[^>]*label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
+        matchHD=re.compile('file: "(.+?)",[^>]*label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
 
         for (vtmp,vurl) in matchSD:
             try:
