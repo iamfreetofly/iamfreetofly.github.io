@@ -557,15 +557,15 @@ def PlayUrlSource(url,name):
 
         for (vtmp,vurl) in matchSD:
             try:            
-                addDir2('Watch ' + name + ' - 360p SD,vurl,20,"")
+                addDir2('Watch ' + name + ' - 360p SD',vurl,20,"")
             except:
-                addDir2('Watch ' + name.decode("utf-8") + ' - 360p SD,vurl,20,"")
+                addDir2('Watch ' + name.decode("utf-8") + ' - 360p SD',vurl,20,"")
                         
         for (vtmp,vurl) in matchHD:
             try:            
-                addDir2('Watch ' + name + ' - 720p HD,vurl,20,"")
+                addDir2('Watch ' + name + ' - 720p HD',vurl,20,"")
             except:
-                addDir2('Watch ' + name.decode("utf-8") + ' - 720p HD,vurl,20,"")
+                addDir2('Watch ' + name.decode("utf-8") + ' - 720p HD',vurl,20,"")
 
 
 #       english subs
