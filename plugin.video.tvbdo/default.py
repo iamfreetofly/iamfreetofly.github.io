@@ -528,7 +528,8 @@ def PlayUrlSource(url,name):
                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
                'Accept-Encoding': 'none',
                'Accept-Language': 'en-US,en;q=0.8',
-               'Connection': 'keep-alive'}
+               'Connection': 'keep-alive',
+               'Set-Cookie': 'PHPSESSID=f8dfbd17097acb0e486f0ae726ab7b36; domain=streamvib.com; path=/'}
         try:
             req = urllib2.Request(url, headers=hdr)
             response = urllib2.urlopen(req)
@@ -557,15 +558,15 @@ def PlayUrlSource(url,name):
 
         for (vurl,vtmp) in matchSD:
             try:            
-                addDir2('Watch ' + name + ' - 360p SD',vurl,20,"")
+                addDir2('Watch ' + name + ' [360p SD]',vurl,20,"")
             except:
-                addDir2('Watch ' + name.decode("utf-8") + ' - 360p SD',vurl,20,"")
+                addDir2('Watch ' + name.decode("utf-8") + ' [360p SD]',vurl,20,"")
                         
         for (vurl,vtmp) in matchHD:
             try:            
-                addDir2('Watch ' + name + ' - 720p HD',vurl,20,"")
+                addDir2('Watch ' + name + ' [720p HD]',vurl,20,"")
             except:
-                addDir2('Watch ' + name.decode("utf-8") + ' - 720p HD',vurl,20,"")
+                addDir2('Watch ' + name.decode("utf-8") + ' [720p HD]',vurl,20,"")
 
 
 #       english subs
@@ -617,15 +618,15 @@ def PlayUrlSource2(url,name):
 
         for (vurl,vtmp) in matchSD:
             try:
-                addDir2('Watch ' + name + ' (English subs) - 360p SD',vurl,20,"")
+                addDir2('Watch ' + name + ' (English subs) [360p SD]',vurl,20,"")
             except:
-                addDir2('Watch ' + name.decode("utf-8") + ' (English subs) - 360p SD',vurl,20,"")
+                addDir2('Watch ' + name.decode("utf-8") + ' (English subs) [360p SD]',vurl,20,"")
 
         for (vurl,vtmp) in matchHD:
             try:
-                addDir2('Watch ' + name + ' (English subs) - 720p HD',vurl,20,"")
+                addDir2('Watch ' + name + ' (English subs) [720p HD]',vurl,20,"")
             except:
-                addDir2('Watch ' + name.decode("utf-8") + ' (English subs) - 720p HD',vurl,20,"")
+                addDir2('Watch ' + name.decode("utf-8") + ' (English subs) [720p HD]',vurl,20,"")
 
 ##        for (vtmp,vurl) in match:
 ##            xbmcPlayer = xbmc.Player()
