@@ -541,12 +541,12 @@ def PlayUrlSource(url,name):
                'Accept-Language': 'en-US,en;q=0.8',
                'Connection': 'keep-alive'}
 
-        _html(url)
-
-        for cookie in cj:
-            if cookie.name == 'PHPSESSID':
-                Streamvib_Sessionid = 'PHPSESSID=%s' % cookie.value
-                print 'Streamvib_Sessionid: %s' %Streamvib_Sessionid
+##        _html(url)
+##
+##        for cookie in cj:
+##            if cookie.name == 'PHPSESSID':
+##                Streamvib_Sessionid = 'PHPSESSID=%s' % cookie.value
+##                print 'Streamvib_Sessionid: %s' %Streamvib_Sessionid
 
 ##        c=requests.session()
 ##        requestp = c.get(url)
@@ -581,6 +581,9 @@ def PlayUrlSource(url,name):
  
 
 	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('http://198.23.71.123/','http://www.streamvib.com/')
+        print ("============================ POSTING newlink ============================")
+        print newlink
+
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
 ##	print ("============================ POSTING listcontent ============================")
