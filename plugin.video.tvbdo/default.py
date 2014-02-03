@@ -11,6 +11,8 @@ import xbmcaddon,xbmcplugin,xbmcgui
 import base64
 import xbmc
 from urlparse import urljoin
+from BeautifulSoup import BeautifulSoup
+
 
 import datetime
 import time
@@ -24,6 +26,11 @@ UATRACK="UA-41910477-1" #<---- GOOGLE ANALYTICS UA NUMBER
 VERSION = "1.0.10" #<---- PLUGIN VERSION
 #domainlist = [" ", " ", " "]
 #domain = domainlist[int(ADDON.getSetting('domainurl'))]
+
+
+cj = cookielib.CookieJar()
+opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+
 def __init__(self):
     self.playlist=sys.modules["__main__"].playlist
 def HOME():
@@ -514,6 +521,10 @@ def Episodes2(url,name,newmode):
 
     #except: pass
 
+def _html(url):
+    """Downloads the resource at the given url and parses via BeautifulSoup"""
+    return BeautifulSoup(_get(url), convertEntities=BeautifulSoup.HTML_ENTITIES)
+
 
 def PlayUrlSource(url,name):
     try:
@@ -529,6 +540,13 @@ def PlayUrlSource(url,name):
                'Accept-Encoding': 'none',
                'Accept-Language': 'en-US,en;q=0.8',
                'Connection': 'keep-alive'}
+
+        _html(url)
+
+        for cookie in cj:
+            if cookie.name == 'PHPSESSID':
+                Streamvib_Sessionid = 'PHPSESSID=%s' % cookie.value
+                print 'Streamvib_Sessionid: %s' %Streamvib_Sessionid
 
 ##        c=requests.session()
 ##        requestp = c.get(url)
@@ -547,10 +565,6 @@ def PlayUrlSource(url,name):
 ##               'Connection': 'keep-alive',
 ##               'Host': 'streamvib.com',
 ##               'Cookie': 'PHPSESSID=f8dfbd17097acb0e486f0ae726ab7b36'}
-
-        cookie = self.http_get(url)['cookie']
-        print ("============================ POSTING cookie ============================")
-        print cookie
 
 
         try:
