@@ -530,13 +530,13 @@ def PlayUrlSource(url,name):
                'Accept-Language': 'en-US,en;q=0.8',
                'Connection': 'keep-alive'}
 
-        c=requests.session()
-        requestp = c.get(url)
-        SSID=requestp.cookies['PHPSESSID']
-        cookiesp = dict(PHPSESSID=SSID)
-        request = c.post(adress, data=param, headers=headers)
-        print request.headers          #headers of the result webpage
-        print request.request.headers  #headers posted
+##        c=requests.session()
+##        requestp = c.get(url)
+##        SSID=requestp.cookies['PHPSESSID']
+##        cookiesp = dict(PHPSESSID=SSID)
+##        request = c.post(adress, data=param, headers=headers)
+##        print request.headers          #headers of the result webpage
+##        print request.request.headers  #headers posted
 
 ##        hdr = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0',
 ##               'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5',
@@ -547,6 +547,11 @@ def PlayUrlSource(url,name):
 ##               'Connection': 'keep-alive',
 ##               'Host': 'streamvib.com',
 ##               'Cookie': 'PHPSESSID=f8dfbd17097acb0e486f0ae726ab7b36'}
+
+        cookie = self.http_get(url)['cookie']
+        print ("============================ POSTING cookie ============================")
+        print cookie
+
 
         try:
             req = urllib2.Request(url, headers=hdr)
