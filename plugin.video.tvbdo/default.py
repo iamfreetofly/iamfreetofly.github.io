@@ -523,13 +523,23 @@ def PlayUrlSource(url,name):
         try:
             url = urllib.unquote(url.encode('utf-8'))
         except: pass
-        hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
-               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+##        hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+##               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+##               'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+##               'Accept-Encoding': 'none',
+##               'Accept-Language': 'en-US,en;q=0.8',
+##               'Connection': 'keep-alive'}
+
+        hdr = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0',
+               'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5',
                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
                'Accept-Encoding': 'none',
-               'Accept-Language': 'en-US,en;q=0.8',
+               'Accept-Language': 'en-US,en;q=0.5',
+               'Referer': url,
                'Connection': 'keep-alive',
-               'Set-Cookie': 'PHPSESSID=f8dfbd17097acb0e486f0ae726ab7b36; domain=streamvib.com; path=/'}
+               'Host': 'streamvib.com',
+               'Cookie': 'PHPSESSID=f8dfbd17097acb0e486f0ae726ab7b36'}
+
         try:
             req = urllib2.Request(url, headers=hdr)
             response = urllib2.urlopen(req)
@@ -734,6 +744,7 @@ def GetContent(url):
 def playVideo(url,name):
     GA("playVideo",name)
     xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link into XBMC Media Player,5000)")
+
     xbmcPlayer = xbmc.Player()
     xbmcPlayer.play(url)
 
