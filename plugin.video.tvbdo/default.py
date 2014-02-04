@@ -581,8 +581,8 @@ def PlayUrlSource(url,name):
  
 
 	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('http://198.23.71.123/','http://www.streamvib.com/')
-        print ("============================ POSTING newlink ============================")
-        print newlink
+##        print ("============================ POSTING newlink ============================")
+##        print newlink
 
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
@@ -775,6 +775,7 @@ def playVideo(url,name):
     GA("playVideo",name)
     xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link into XBMC Media Player,5000)")
 
+    url = url + '|Referer=http://p.jwpcdn.com/6/7/jwplayer.flash.swf'
     xbmcPlayer = xbmc.Player()
     xbmcPlayer.play(url)
 
