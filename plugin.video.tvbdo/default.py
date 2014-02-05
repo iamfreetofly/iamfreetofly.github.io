@@ -590,11 +590,18 @@ def PlayUrlSource(url,name):
 ##	print listcontent
 
 
+        match=re.compile('<source src="(.+?)" (.+?)/>').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
         matchSD=re.compile('file: "(.+?)",(.+?)label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
         matchHD=re.compile('label: "SD" [^>]* file: "(.+?)",(.+?)label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
 
 ##        print ("============================ POSTING match ============================")
 ##        print match
+
+        for (vurl,vtmp) in match:
+            try:            
+                addDir2('Watch ' + name,vurl,20,"")
+            except:
+                addDir2('Watch ' + name.decode("utf-8"),vurl,20,"")
 
         for (vurl,vtmp) in matchSD:
             try:            
@@ -653,8 +660,15 @@ def PlayUrlSource2(url,name):
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
 
+        match=re.compile('<source src="(.+?)" (.+?)/>').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
         matchSD=re.compile('file: "(.+?)",(.+?)label: "SD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))
         matchHD=re.compile('label: "SD" [^>]* file: "(.+?)",(.+?)label: "HD"').findall(urllib.unquote(listcontent[0]).decode('utf-8'))  
+
+        for (vurl,vtmp) in match:
+            try:
+                addDir2('Watch ' + name + ' (English subs)',vurl,20,"")
+            except:
+                addDir2('Watch ' + name.decode("utf-8") + ' (English subs)',vurl,20,"")
 
         for (vurl,vtmp) in matchSD:
             try:
