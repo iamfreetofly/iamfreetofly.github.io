@@ -789,7 +789,12 @@ def playVideo(url,name):
     GA("playVideo",name)
     xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link into XBMC Media Player,5000)")
 
-    url = url + '|Referer=http://p.jwpcdn.com/6/7/jwplayer.flash.swf'
+##    try:
+##        url = urllib.unquote(url.encode('utf-8'))
+##    except: pass
+##
+##    url = url + '|Referer=http://p.jwpcdn.com/6/7/jwplayer.flash.swf'
+
     xbmcPlayer = xbmc.Player()
     xbmcPlayer.play(url)
 
