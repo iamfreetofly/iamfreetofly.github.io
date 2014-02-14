@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<addon id="plugin.video.tvbdo" version="1.0.28" name="TVBdo.com" provider-name="Iamfreetofly">
+<addon id="plugin.video.tvbdo" version="1.0.29" name="TVBdo.com" provider-name="Iamfreetofly">
   <requires>
     <import addon="xbmc.python" version="2.1" />
     <import addon="script.module.simplejson" />
