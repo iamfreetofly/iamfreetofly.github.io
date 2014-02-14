@@ -788,6 +788,9 @@ def GetContent(url):
 def playVideo(url,name):
     GA("playVideo",name)
     xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link into XBMC Media Player,5000)")
+    
+    print ("============================ POSTING url ============================")
+    print url
 
 ##    try:
 ##        url = urllib.unquote(url.encode('utf-8'))
