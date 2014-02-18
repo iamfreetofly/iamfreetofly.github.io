@@ -580,8 +580,7 @@ def PlayUrlSource(url,name):
         #newlink = ''.join(link.splitlines()).replace('\t','').replace('href="/file','href="http://www.putlocker.com/file')
  
 
-	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com')
-##	replace('http://198.23.71.123/','http://www.streamvib.com/')
+	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('http://198.23.71.123/','http://www.streamvib.com/')
 ##        print ("============================ POSTING newlink ============================")
 ##        print newlink
 
@@ -657,8 +656,7 @@ def PlayUrlSource2(url,name):
             link = link.encode("UTF-8")
         except: pass
 
-	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com')
-##	replace('http://198.23.71.123/','http://www.streamvib.com/')
+	newlink = ''.join(link.splitlines()).replace('\t','').replace('http://tvbdo.com','http://www.tvbdo.com').replace('http://198.23.71.123/','http://www.streamvib.com/')
 
         listcontent=re.compile('<div id="main">(.+?)</body>').findall(newlink)
 
