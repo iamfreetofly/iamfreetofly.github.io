@@ -1,0 +1,15 @@
+item_info_name=title
+item_info_from=@PARAM1@
+item_info_build=Cast3D - %s
+
+item_info_name=pageUrl
+item_info_from=@PARAM1@
+item_info_build=http://www.cast3d.tv/embed.php?channel=%s&vw=640&vh=385&domain=atdhe.ws
+
+
+item_info_name=url
+item_info_from=@PARAM1@
+#item_info_convert=getInfo('%s','.*getJSON\("([^'"]+)".*','http://www.cast3d.tv')
+item_info_convert=getInfo('http://www.cast3d.tv/securetoken.php?id=%s','.*?rtmp":"([^'"]+).*',' http://www.cast3d.tv')
+item_info_build=%s
+

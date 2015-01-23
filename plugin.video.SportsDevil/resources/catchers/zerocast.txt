@@ -1,0 +1,22 @@
+item_info_name=pageUrl
+item_info_from=@PARAM1@
+item_info_convert=getInfo('%s','.*?var url\s*=\s*'([^"']+).*','@REFERER@')
+item_info_build=%s
+
+item_info_name=file
+item_info_from=pageUrl
+item_info_convert=getInfo('%s','.*?stream[=:,]\s*['"]([^'"]+)['"].*','@REFERER@')
+item_info_build=%s
+
+item_info_name=title
+item_info_from=file
+item_info_build=ZeroCast - %s
+
+item_info_name=rtmp
+item_info_from=pageUrl
+item_info_convert=getInfo('%s','.*?file:\s*['"]([^"'&]+).*','@REFERER@')
+item_info_build=%s
+
+item_info_name=url
+item_info_from=rtmp://rtmp.zerocast.tv:1935/live playpath=' + file + ' swfUrl=http://p.jwpcdn.com/6/10/jwplayer.flash.swf live=1 flashver=WIN\202012,0,0,77 timeout=15 token=3a439185c0f4b61f swfVfy=1 pageUrl=http://zerocast.tv
+item_info_build=%s

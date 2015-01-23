@@ -1,0 +1,33 @@
+item_info_name=title
+item_info_from=@PARAM1@
+item_info_build=Xusca - %s
+
+item_info_name=pageUrl
+item_info_from=@PARAM1@
+item_info_build=http://xuscacamusca.se/?id=%s
+
+item_info_name=swf
+item_info_from=pageUrl
+item_info_convert=getInfo('%s','.*flashplayer:\s*["']([^'"]+).*','@REFERER@')
+item_info_build=%s
+
+item_info_name=file
+item_info_from=pageUrl
+item_info_convert=getInfo('%s','.*file:\s*["']([^'"]+).*','@REFERER@')
+item_info_build=%s
+
+item_info_name=rtmp
+item_info_from=pageUrl
+item_info_convert=getInfo('%s','.*streamer:\s*["']([^'"]+).*','@REFERER@')
+item_info_build=%s
+
+
+item_info_name=url
+item_info_from=rtmp + '' + file + ' swfUrl=http://res.xuscacamusca.se/YjVmZTBmOTQ5ZTkzYTBlNzkzNTRhMWE0/jwplayer.flash.swf live=1 timeout=15 swfVfy=1 pageUrl=' + pageUrl
+item_info_build=%s
+
+
+
+
+
+
