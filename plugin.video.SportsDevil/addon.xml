@@ -2,7 +2,7 @@
 <addon
   id="plugin.video.SportsDevil"
   version="3.0.1"
-  name="DigiTele Sports"
+  name="SportsDevil"
   provider-name="AarronLee, MaxMustermann">
   <requires>
    <import addon="xbmc.python" version="2.1.0"/>
