@@ -14,8 +14,8 @@
    <provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
-    <summary>DigiTele Sports</summary>
-    <description>Add-on para ver los canales deportivos de DigiTele (vip racing 1-2-3-4-5-6-7-8)</description>
+    <summary>SportsDevil (DigiTele Sports)</summary>
+    <description>Play videos of different sports streaming sites</description>
     <platform>all</platform>
   </extension>
 </addon>
