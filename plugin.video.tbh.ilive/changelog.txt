@@ -1,0 +1,78 @@
+[B]iLiVE - 0.2.6[/B]
+- Additional Coding for catching the url tag.
+
+[B]iLiVE - 0.2.5[/B]
+- Adjustments to Old Menu for the new url regex and other stuff.
+
+[B]iLiVE - 0.2.4[/B]
+- prevented premium channels from canceling playback if account is enabled... still get the dialog.
+- Attempting to use Login for before playback if account is enabled.
+- Attempting setup for user login method.
+- Added StreamLive to addon name.
+- Changed /view-channel/ to /watch-channel/.
+
+[B]iLiVE - 0.2.3[/B]
+- Fixed for /view-channel/ change in urls.
+- ...
+- Saving remote xml file locally for use when remote file shows empty.
+- More regex editing.
+- Additional domain handling.
+
+[B]iLiVE - 0.2.2[/B]
+- New Menu: Search: removed the parsing of symbols.
+- Api list on one of the sites seem to be back up again.
+- Old Menu system somewhat working for the moment.
+- Additional optional domain regex.
+- Adding additional fall-back catching for url calls.
+- Addon Settings: option for which domain to use.
+
+[B]iLiVE - 0.2.1[/B]
+- Channel list url adjusted.
+
+[B]iLiVE - 0.2.0[/B]
+- common.py: nURL(url,'get'): fixed to try an alternative domain if an error accurs.
+- liLiveTo.py: iLivePlay(): 'ilive.to/embed/' to '(?:streamlive.to|ilive.to)?/embed/' regex string change.
+
+[B]iLiVE - 0.1.9[/B]
+- Message dialogs on Channel Playback attempts for premium and offline channels.
+
+[B]iLiVE - 0.1.8[/B]
+- ilive usage for Playback.
+- Thanks goes out to al101 and L2501 for help with 3rd function for ilive page decryption.
+
+[B]iLiVE - 0.1.7[/B]
+- Setting: Sleep Time before Play Attempt.
+- Setting: Time-out of Stream url to be played.
+- Setting: Default Link Type
+- Added ContextMenuItems... Play (HLS,RTMP,RTSP), Channel Information.
+
+[B]iLiVE - 0.1.6[/B]
+- Changing playable link to 3rd of 3 possible links.
+
+[B]iLiVE - 0.1.5[/B]
+- Working on Player Function.
+
+[B]iLiVE - 0.1.4[/B]
+- New browsing/filtering method for channel listings.
+
+[B]iLiVE - 0.1.3[/B]
+- settings.xml: Visibility on a lot of things, and a little bit of other changes.
+- Search Feature.
+- settings.xml: Visible=False for enableMeta.
+
+[B]iLiVE - 0.1.2[/B]
+- Code Cleanup.
+- Fixed Player Function.
+
+[B]iLiVE - 0.1.1[/B]
+- Some Player Tweaks for Gotham RC1.
+
+[B]iLiVE - 0.1.0[/B]
+- url resolving play issue #'d out for now.
+
+[B]iLiVE - 0.0.9[/B]
+- Setup of the Sub-Addon as a Full-Addon.
+- Graphics mostly by TwiztedZero and TheHighway.
+- Initial Sub-Addon for TheBinaryHighway.
+
+
