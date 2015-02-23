@@ -1,0 +1,26 @@
+
+[COLOR grey][Date: 2014.04.28][/COLOR][COLOR black][Post: 1][/COLOR]
+[COLOR cornflowerblue][B]Release:[/B][/COLOR]  v0.3.4
+
+[COLOR grey][Date: 2013.12.02][/COLOR][COLOR black][Post: 1][/COLOR]
+[COLOR cornflowerblue][B]Release:[/B][/COLOR]  v0.3.3
+
+[COLOR grey][Date: 2013.09.16][/COLOR][COLOR black][Post: 1][/COLOR]
+[COLOR cornflowerblue][B]Release:[/B][/COLOR]  v0.3.2 (Initial Build)
+
+[COLOR grey][Date: 2013.08.29][/COLOR][COLOR black][Post: 1][/COLOR]
+[COLOR red][B]News:[/B][/COLOR]  addon currently being updated a lot 
+### while testing and weeding out the troublesome stations.
+
+[COLOR grey][Date: 2013.08.28][/COLOR][COLOR black][Post: 4][/COLOR]
+[COLOR red][B]News:[/B][/COLOR]  #XBMCHUB @ irc.freenode.net
+
+[COLOR grey][Date: 2013.08.28][/COLOR][COLOR black][Post: 3][/COLOR]
+[COLOR cornflowerblue][B]Release:[/B][/COLOR]  v0.2.8 (Initial Build)
+
+[COLOR grey][Date: 2013.08.28][/COLOR][COLOR black][Post: 2][/COLOR]
+[COLOR red][B]News:[/B][/COLOR]  v0.2.8 (Initial Build)
+
+[COLOR grey][Date: 2013.08.28][/COLOR][COLOR black][Post: 1][/COLOR]
+[COLOR cornflowerblue][B]Private Build:[/B][/COLOR]  v0.2.8 (Initial Build)
+
