@@ -4,7 +4,7 @@ item_info_build=MegaTV - %s
 
 item_info_name=pageUrl
 item_info_from=@PARAM1@
-item_info_build=http://megatvhd.tv/wizi.php?id=%s
+item_info_build=http://megatvhd.tv/roja.php?id=%s&width=700&height=480
 
 item_info_name=rtmp
 item_info_from=pageUrl

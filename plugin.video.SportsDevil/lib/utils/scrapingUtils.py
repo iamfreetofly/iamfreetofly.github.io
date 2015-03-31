@@ -1,17 +1,18 @@
 # -*- coding: latin-1 -*-
 
 
-import regexUtils as re
+import regexUtils
+import re
 import urllib
 import urlparse
 
 
 def findJS(data):
-    idName = 'f*id'
+    idName = '(?:f*id|ch)'
     jsName = '(.*?\.js)'
-    regex = "(?:java)?script[^<]+" + idName + "\s*=\s*[\"']([^\"']+)[\"'][^<]*</script\s*>[^<]*<script[^<]*src=[\"']" + jsName + "[\"']"
+    regex = "(?:java)?scr(?:'\+')?ipt[^<]+" + idName + "\s*=\s*[\"']([^\"']+)[\"'][^<]*</scr(?:'\+')?ipt\s*>[^<]*<scr(?:'\+')?ipt[^<]*src=[\"']" + jsName + "[\"']"
     
-    jscript = re.findall(data, regex)
+    jscript = regexUtils.findall(data, regex)
     if jscript:
         jscript = filter(lambda x: x[1].find('twitter') == -1, jscript)
         return jscript
@@ -20,10 +21,16 @@ def findJS(data):
 
 
 def findPHP(data, streamId):
-    regex = "document.write\('.*?src=['\"]*(.*?.php\?.*?=).*?['\" ]*.*?\)"
-    php = re.findall(data, regex)
+    regex = "document.write\('.*?src=['\"]*(.*?.php[^&\"]*).*?['\" ]*.*?\)"
+    php = regexUtils.findall(data, regex)
     if php:
-        return php[0] + streamId
+        return re.sub(r"\'\+\s*(?:f*id|ch)\s*\+\'", "%s" % streamId,php[0])
+    
+    regex = "document.write\('.*?src=['\"]*(.*?(?:f*id|ch)\s*\+'\.html).*?['\" ]*.*?\)"
+    html = regexUtils.findall(data, regex)
+    if html:
+        return re.sub(r"\'\+\s*(?:f*id|ch)\s*\+\'", "%s" % streamId,html[0])
+    
     return None
 
 def findRTMP(url, data):
@@ -53,9 +60,9 @@ def findRTMP(url, data):
     playpath = ''
     swfUrl = ''
 
-    rtmp = re.findall(text, sep1 + 'streamer' + sep2 + value)
+    rtmp = regexUtils.findall(text, sep1 + 'streamer' + sep2 + value)
     if not rtmp:
-        tryMethod2 = re.findall(text, sep1 + 'file' + sep2 + value)
+        tryMethod2 = regexUtils.findall(text, sep1 + 'file' + sep2 + value)
         if tryMethod2 and tryMethod2[0].startswith('rtmp'):
             method1 = False
             method2 = True
@@ -85,18 +92,18 @@ def findRTMP(url, data):
             if clipStart < max_idx:
                 text = text[clipStart:]
             if method1:
-                playpath = re.findall(area, sep1 + 'file' + sep2 + value)
+                playpath = regexUtils.findall(area, sep1 + 'file' + sep2 + value)
             if method2:
-                playpath = re.findall(area, sep1 + 'id' + sep2 + value)
+                playpath = regexUtils.findall(area, sep1 + 'id' + sep2 + value)
                 if playpath:
                     tmpRtmp = tmpRtmp + '/' + playpath[0]
             
             if playpath:
-                swfUrl = re.findall(area, 'SWFObject\([\'"]([^\'"]+)[\'"]')
+                swfUrl = regexUtils.findall(area, 'SWFObject\([\'"]([^\'"]+)[\'"]')
                 if not swfUrl:
-                    swfUrl = re.findall(area, sep1 + '([^\'"& ]+\.swf)')
+                    swfUrl = regexUtils.findall(area, sep1 + '([^\'"& ]+\.swf)')
                     if not swfUrl:
-                        swfUrl = re.findall(data, sep1 + '([^\'"& ]+\.swf)')
+                        swfUrl = regexUtils.findall(data, sep1 + '([^\'"& ]+\.swf)')
 
                 if swfUrl:
                     finalSwfUrl = swfUrl[0]
@@ -104,7 +111,7 @@ def findRTMP(url, data):
                         finalSwfUrl = urlparse.urljoin(url, finalSwfUrl)
                     
                     regex = '://(.*?)/'
-                    server = re.findall(tmpRtmp, regex)
+                    server = regexUtils.findall(tmpRtmp, regex)
                     if server:
                         if server[0].find(':') == -1:
                             tmpRtmp = tmpRtmp.replace(server[0], server[0] + ':1935')
@@ -124,7 +131,7 @@ def getHostName(url):
 def findFrames(data):
     if data.lower().find('frame') == -1:
         return None
-    return re.findall(data, "(frame[^>]*)>")
+    return regexUtils.findall(data, "(frame[^>]*)>")
 
 
 def findContentRefreshLink(data):
@@ -133,13 +140,13 @@ def findContentRefreshLink(data):
     if len(data.replace(' ','')) > maxLength:
         return None 
     
-    regex = '0;url=([^\'" ]+)'
-    links = re.findall(data, regex)
+    regex = '0;\s*url=([^\'" ]+)'
+    links = regexUtils.findall(data, regex)
     if links:
         return links[0]
     else:
         regex = 'window.location\s*=\s*[\'"]([^\'"]+)[\'"]'
-        links = re.findall(data, regex)
+        links = regexUtils.findall(data, regex)
         if links:
             return links[0]
         
@@ -147,18 +154,18 @@ def findContentRefreshLink(data):
 
 
 def findEmbedPHPLink(data):
-    regex = '<script type="text/javascript" src="([^"]+\.php\?[^"]+)"\s*>\s*</script>'
+    regex = '<script type="text/javascript" src="((?![^"]+localtimes)(?![^"]+adcash)[^"]+\.php\?[^"]+)"\s*>\s*</script>'
 
-    links = re.findall(data, regex)
+    links = regexUtils.findall(data, regex)
     if links:
         return links[0]
     
+   
     return None
-
 
 def findVCods(data):
     regex = "function getURL03.*?sUrl.*?'([^']+)'.*?cod1.*?'([^']+)'.*?cod2.*?'([^']+)'.*?SWFObject\('([^']+)'"
-    vcods = re.findall(data, regex)
+    vcods = regexUtils.findall(data, regex)
     if vcods:
         return vcods[0]
     
@@ -174,24 +181,28 @@ def findVideoFrameLink(page, data):
     if not frames:
         return None
     
-    iframes = re.findall(data, "(frame[^>]* height=[\"']*(\d+)[\"']*[^>]*>)")
+    iframes = regexUtils.findall(data, "(frame(?![^>]*cbox\.ws)(?![^>]*chat\d*\.\w+)(?![^>]*ad122m)(?![^>]*capacanal)(?![^>]*programacion)[^>]*\sheight\s*=\s*[\"']*([\%\d]+)(?:px)?[\"']*[^>]*>)")
 
     if iframes:
         for iframe in iframes:
-
-            height = int(iframe[1])
+            if iframe[1] == '100%':
+                height = minheight+1
+            else:
+                height = int(iframe[1])
             if height > minheight:
-                m = re.findall(iframe[0], "[\"' ]width=[\"']*(\d+[%]*)[\"']*")
+                m = regexUtils.findall(iframe[0], "[\"' ]width\s*=\s*[\"']*(\d+[%]*)(?:px)?[\"']*")
                 if m:
                     if m[0] == '100%':
                         width = minwidth+1
                     else:
                         width = int(m[0])
                     if width > minwidth:
-                        m = re.findall(iframe[0], '[\'"\s]src=["\']*\s*([^"\' ]+)\s*["\']*')
+                        m = regexUtils.findall(iframe[0], '[\'"\s]src=["\']*\s*([^"\' ]+)\s*["\']*')
                         if m:
                             link = m[0]
                             if not link.startswith('http://'):
+                                #if not page.endswith('/'):
+                                #    page += '/'
                                 up = urlparse.urlparse(urllib.unquote(page))
                                 if link.startswith('/'):
                                     link = urllib.basejoin(up[0] + '://' + up[1],link)
@@ -200,16 +211,16 @@ def findVideoFrameLink(page, data):
                             return link.strip()
 
     # Alternative 1
-    iframes = re.findall(data, "(frame[^>]*[\"; ]height:\s*(\d+)[^>]*>)")
+    iframes = regexUtils.findall(data, "(frame(?![^>]*cbox\.ws)(?![^>]*capacanal)(?![^>]*programacion)[^>]*[\"; ]height:\s*(\d+)[^>]*>)")
     if iframes:
         for iframe in iframes:
             height = int(iframe[1])
             if height > minheight:
-                m = re.findall(iframe[0], "[\"; ]width:\s*(\d+)")
+                m = regexUtils.findall(iframe[0], "[\"; ]width:\s*(\d+)")
                 if m:
                     width = int(m[0])
                     if width > minwidth:
-                        m = re.findall(iframe[0], '[ ]src=["\']*\s*([^"\' ]+)\s*["\']*')
+                        m = regexUtils.findall(iframe[0], '[\"; ]src=["\']*\s*([^"\' ]+)\s*["\']*')
                         if m:
                             link = m[0]
                             if not link.startswith('http://'):
@@ -217,7 +228,7 @@ def findVideoFrameLink(page, data):
                             return link.strip()
 
     # Alternative 2 (Frameset)
-    iframes = re.findall(data, '<FRAMESET[^>]+100%[^>]+>\s*<FRAME[^>]+src="([^"]+)"')
+    iframes = regexUtils.findall(data, '<FRAMESET[^>]+100%[^>]+>\s*<FRAME[^>]+src="([^"]+)"')
     if iframes:
         link = iframes[0]
         if not link.startswith('http://'):

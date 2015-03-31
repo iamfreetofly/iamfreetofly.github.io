@@ -54,6 +54,7 @@ class Mode:
     DOWNLOADCUSTOMMODULE = 10
     REMOVEFROMCUSTOMMODULES = 11
     INSTALLADDON = 12
+    CHROME = 13
     
 
 
@@ -120,6 +121,12 @@ class Main:
         else:
             url = urllib.unquote_plus(videoItem['url'])
             xbmc.Player(self.getPlayerType()).play(url, listitem)
+    
+    def launchChrome (self, url, title):
+        action = 'RunPlugin(%s)' % ('plugin://plugin.program.chrome.launcher/?kiosk=yes&mode=showSite&stopPlayback=yes&url=' + url)
+        common.log('chrome test:' + str(action))
+        xbmc.executebuiltin(enc.unescape(action))
+        
 
 
     def downloadVideo(self, url, title):
@@ -458,6 +465,8 @@ class Main:
                         # Add to favourites
                         contextMenuItem = createContextMenuItem('Add to SportsDevil favourites', Mode.ADDTOFAVOURITES, codedItem)
                         contextMenuItems.append(contextMenuItem)
+                contextMenuItem = createContextMenuItem('Open with Chrome launcher', Mode.CHROME, codedItem)
+                contextMenuItems.append(contextMenuItem)
 
         liz = self.createXBMCListItem(lItem)
 
@@ -604,10 +613,10 @@ class Main:
         mode = int(self.addon.queries['mode'])
         queryString = self.addon.queries['item']
         item = ListItem.create()
-	if mode in [Mode.ADDTOFAVOURITES, Mode.REMOVEFROMFAVOURITES, Mode.EDITITEM]:
-        	item.infos = self.addon.parse_query(urllib.unquote(queryString),{})
-	else:
-		item.infos = self.addon.parse_query(queryString,{})
+        if mode in [Mode.CHROME, Mode.ADDTOFAVOURITES, Mode.REMOVEFROMFAVOURITES, Mode.EDITITEM]:
+            item.infos = self.addon.parse_query(urllib.unquote(queryString),{})
+        else:
+            item.infos = self.addon.parse_query(queryString,{})
         return [mode, item]
 
 
@@ -698,6 +707,11 @@ class Main:
                     url = urllib.unquote(item['url'])
                     title = item['title']
                     self.downloadVideo(url, title)
+                
+                elif mode == Mode.CHROME:
+                    url = urllib.quote(item['url'])
+                    title = item['title']
+                    self.launchChrome(url, title)
                 
                 elif mode == Mode.REMOVEFROMCUSTOMMODULES:
                     self.removeCustomModule(item)

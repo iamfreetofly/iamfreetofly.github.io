@@ -7,7 +7,7 @@ import re
 from regexUtils import parseTextToGroups
 from webUtils import get_redirected_url
 
-from javascriptUtils import JsFunctions, JsUnpacker,JsUnpackerV2, JsUnwiser
+from javascriptUtils import JsFunctions, JsUnpacker,JsUnpackerV2, JsUnwiser, JsUnIonCube, JsUnFunc, JsUnPP
 
 
 def encryptDES_ECB(data, key):
@@ -48,17 +48,33 @@ def doDemystify(data):
     jsU = JsUnpacker()
     jsUV2 =JsUnpackerV2()
     jsUW = JsUnwiser()
+    jsUI = JsUnIonCube()
+    jsUF = JsUnFunc()
+    jsUP = JsUnPP()
 
     # replace NUL
     data = data.replace('\0','')
 
     # unescape
-    r = re.compile('unescape\(\s*["\']([^\'"]+)["\']')
-    gs = r.findall(data)
-    if gs:
-        for g in gs:
+    r = re.compile('a1=["\'](%3C(?=[^\'"]*%\w\w)[^\'"]+)["\']')
+    while r.findall(data):
+        for g in r.findall(data):
             quoted=g
             data = data.replace(quoted, urllib.unquote_plus(quoted))
+    
+    
+    r = re.compile('unescape\(\s*["\']((?=[^\'"]*%\w\w)[^\'"]+)["\']')
+    while r.findall(data):
+        for g in r.findall(data):
+            quoted=g
+            data = data.replace(quoted, urllib.unquote_plus(quoted))
+    
+    r = re.compile('unescape\(\s*["\']((?=[^\'"]*\\u00)[^\'"]+)["\']')
+    while r.findall(data):
+        for g in r.findall(data):
+            quoted=g
+            data = data.replace(quoted, quoted.decode('unicode-escape'))
+       
 
     # n98c4d2c
     if 'function n98c4d2c(' in data:
@@ -123,11 +139,11 @@ def doDemystify(data):
 
 
     # Tiny url
-    r = re.compile('[\'"](http://(?:www.)?tinyurl.com/[^\'"]+)[\'"]',re.IGNORECASE + re.DOTALL)
-    m = r.findall(data)
-    if m:
-        for tiny in m:
-            data = data.replace(tiny, get_redirected_url(tiny))
+    #r = re.compile('[\'"](http://(?:www.)?tinyurl.com/[^\'"]+)[\'"]',re.IGNORECASE + re.DOTALL)
+    #m = r.findall(data)
+    #if m:
+        #for tiny in m:
+            #data = data.replace(tiny, get_redirected_url(tiny))
 
 
     # JS P,A,C,K,E,D
@@ -143,6 +159,20 @@ def doDemystify(data):
     # JS W,I,S,E
     if jsUW.containsWise(data):
         data = jsUW.unwiseAll(data)
+        escape_again=True
+
+    # JS IonCube
+    if jsUI.containsIon(data):
+        data = jsUI.unIonALL(data)
+        escape_again=True
+        
+    # Js unFunc
+    if jsUF.cointainUnFunc(data):
+        data = jsUF.unFuncALL(data)
+        escape_again=True
+    
+    if jsUP.containUnPP(data):
+        data = jsUP.UnPPAll(data)
         escape_again=True
 
     # unescape again

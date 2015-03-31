@@ -2,6 +2,8 @@
 
 import os
 import urllib
+import urlparse
+import HTMLParser
 import re
 from fileUtils import setFileContent, getFileContent
 import encodingUtils as enc
@@ -80,7 +82,10 @@ class BaseRequest(object):
         return self._headRequest(url)
     
     def getSource(self, url, form_data, referer):
-        url = urllib.unquote_plus(url)
+        url = HTMLParser.HTMLParser().unescape(url)
+        parsed_link = urlparse.urlsplit(url.encode('utf8'))
+        parsed_link = parsed_link._replace(path=urllib.quote(parsed_link.path))
+        url = parsed_link.geturl()
         if not referer:
             referer = url
         headers = {'Referer': referer}

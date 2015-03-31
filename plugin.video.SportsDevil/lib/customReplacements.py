@@ -83,7 +83,7 @@ class CustomReplacements(object):
                     jsName = param1
                     idName = param2
                     varName = param3
-                    regex = "(?:java)?script[^<]+" + idName + "\s*=\s*[\"']([^\"']+)[\"'][^<]*</script\s*>[^<]*<script[^<]*src=[\"']" + jsName + "[\"']"
+                    regex = "(?:java)?scr(?:'\+')?ipt[^<]+" + idName + "\s*=\s*[\"']([^\"']+)[\"'][^<]*</scr(?:'\+')?ipt\s*>[^<]*<scr(?:'\+')?ipt[^<]*src=[\"']" + jsName + "[\"']"
                     lines = "item_infos=" + regex + "\nitem_order=" + varName
                     data = data.replace(idat, lines)
         return data

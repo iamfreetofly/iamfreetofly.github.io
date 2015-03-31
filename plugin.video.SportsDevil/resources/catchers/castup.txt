@@ -7,21 +7,23 @@ item_info_from=@PARAM1@
 item_info_build=http://www.castup.tv/embed.php?channel=%s&vw=650&vh=460
 
 
+item_info_name=swf
+item_info_from=pageUrl
+item_info_convert=getInfo('%s','.*?SWFObject\(['"]([^'"]+)['"].*','@REFERER@')
+item_info_build=%s
+
+item_info_name=tmp
+item_info_from=pageUrl
+item_info_convert=getInfo('%s','.*?getJSON\("([^'"]+).*','@REFERER@')
+item_info_convert=getInfo('%s','.*rtmp":"([^'"]+).*streamname":"([^'"]+).*','@REFERER@','rtmp.tmp|file')
+item_info_build=%s
+
+item_info_name=rtmp
+item_info_from=rtmp.tmp
+item_info_convert=replace('%s','/live',':80/live')
+item_info_build=%s
+
+
 item_info_name=url
-item_info_from=@PARAM1@
-item_info_build=rtmpe://cdn.castup.tv:80/redirect/%s swfUrl=http://www.castup.me/player/pl.swf live=1 token=#@8x12pX@!x@# timeout=15 swfVfy=1 pageUrl=http://www.castup.tv
-
-
-#item_info_name=tmp
-#item_info_from=pageUrl
-#item_info_convert=getInfo('%s','.*'([^']+\.swf)'.*?['"]file['"][:,]\s*['"]([^'"]+)['"].*?['"]streamer['"][:,]\s*['"]([^'"]+)['"].*','@REFERER@','swf|file|rtmp')
-#item_info_build=%s
-
-#item_info_name=rtmp
-#item_info_from=rtmp.tmp
-#item_info_convert=replace('%s','/redirect',':1935/redirect')
-#item_info_build=%s
-
-#item_info_name=url
-#item_info_from=rtmp + ' playpath=' + file + ' swfUrl=' + swf + ' live=1 token=#@8x12pX@!x@# timeout=15 swfVfy=1 pageUrl=' + pageUrl
-#item_info_build=%s
+item_info_from=rtmp + ' playpath=' + file + ' swfUrl=http://www.castup.tv' + swf + ' live=1 timeout=15 token=#@8x12pX@!x@# swfVfy=1 pageUrl=' + pageUrl
+item_info_build=%s

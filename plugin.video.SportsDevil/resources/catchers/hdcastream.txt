@@ -32,5 +32,5 @@ item_info_convert=parseText('%s','.*rtmp://[\.\w:]*/([^"']+)')
 item_info_build=%s
 
 item_info_name=url
-item_info_from=rtmp + ' app=' + app + ' playpath=' + file + ' swfUrl=http://www.hdmytv.com/jwplayer5/addplayer/jwplayer.flash.swf live=true flashver=WIN%252012,0,0,77 token=@@stop-stole@@ timeout=15 pageUrl=' + pageUrl
+item_info_from=rtmp + ' app=' + app + ' playpath=' + file + ' swfUrl=http://www.hdmytv.com/jwplayer5/addplayer/jwplayer.flash.swf live=true flashver=WIN\2017,0,0,134 token=@@stop-stole@@ timeout=15 pageUrl=' + pageUrl
 item_info_build=%s

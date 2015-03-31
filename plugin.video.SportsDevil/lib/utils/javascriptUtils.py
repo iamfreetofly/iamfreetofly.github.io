@@ -1,7 +1,9 @@
 # -*- coding: latin-1 -*-
 
 import re
+import math
 import urllib
+import base64
 from string import join
 import traceback, sys
 
@@ -179,6 +181,48 @@ class JsUnpackerV2:
         return aa+bb
           
         
+class JsUnIonCube:
+    def ionX(self, x, arrayX):
+        r = []
+        s = 0
+        w = 0
+        
+        for d in x:
+            w |= int(arrayX[ord(d)-48]) << s
+            if (s):
+                r.append(chr(165 ^ w & 255))
+                w >>= 8
+                s -= 2
+            else:
+                s = 6
+
+        r = ''.join(r)
+        return r
+
+    def unIonALL(self,data):
+        in_data=data
+        sPattern = 'c="(.*?)";eval\\(unescape\\(".*"\\)\\);x\\("(.*?)"\\)'
+        undc_data=re.compile(sPattern).findall(in_data)
+        c = undc_data[0][0]
+        x = undc_data[0][1]
+
+        l = list(c)
+        for i in range(0, len(c), 3):
+            l[i]='%'
+
+        c = ''.join(l)
+        c = urllib.unquote_plus(c)
+
+        arrayPattern = 't=Array\\((.*?)\\)'
+        arrayData = re.compile(arrayPattern).findall(c)
+        ionArray = arrayData[0].split(',')
+        data=self.ionX(x,ionArray)
+
+        return data
+
+    def containsIon(self,data):
+        return 'eval(unescape("d="";' in data
+
 class JsUnwiser:
 
     def unwiseAll(self, data):
@@ -253,3 +297,49 @@ class JsUnwiser:
             return self.unwise(ret)
         else:
             return ret
+
+class JsUnFunc:
+    def unFuncALL(self,data):
+        in_data = data
+
+        sPattern = r"var\s*tmp\s*=\s*s.split\(\"([^\"]+)\"\)"
+        kPattern = r"unescape\(tmp\[1\]\s*\+\s*\"([^\"]+)\"\)"
+        dataPattern = r"document.write\(\w+\(\'\'\)\s*\+\s*\'([^\']+)"
+        modPattern = r"charCodeAt\(i\)\)\+\s*([^\)]+)\)"
+        
+        s_data = re.compile(sPattern).findall(in_data)
+        k_data = re.compile(kPattern).findall(in_data)
+        undc_data = re.compile(dataPattern).findall(in_data)
+        mod_data = re.compile(modPattern).findall(in_data)
+
+        sDelimiter = s_data[0]
+        s = undc_data[0]
+        tmp = urllib.unquote(s).split(sDelimiter)
+        k = tmp[1] + k_data[0]
+        mod = int(mod_data[0])
+        encData = tmp[0]
+        
+        for i,d in enumerate(encData):
+            data += chr((int(k[i % len(k)]) ^ ord(d)) + mod)
+
+        return data
+    
+    def cointainUnFunc(self,data):
+        return 'String.fromCharCode((parseInt' in data
+    
+class JsUnPP:
+    def UnPPAll(self,data):
+        def removeNonAscii(s): return "".join(i for i in s if ord(i)<128)
+        
+        in_data = data
+        tPattern = r"var\s*t=['\"](\w+)['\"]\s*;\s*for"
+        
+        t_data = re.compile(tPattern).findall(in_data)
+        
+        for i in t_data:
+            out_data = removeNonAscii(str(base64.b16decode(i.upper())))
+            data = re.sub(r"var\s*t[^}]+}", out_data, data)
+                
+        return data
+    def containUnPP(self,data):
+        return 'parseInt(t.substr' in data

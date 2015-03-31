@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon
   id="plugin.video.SportsDevil"
-  version="3.0.1"
+  version="1.8.8.0"
   name="SportsDevil"
-  provider-name="AarronLee, MaxMustermann">
+  provider-name="MaxMustermann">
   <requires>
    <import addon="xbmc.python" version="2.1.0"/>
    <import addon="script.common.plugin.cache" version="0.9.1"/>
@@ -14,7 +14,7 @@
    <provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
-    <summary>SportsDevil (DigiTele Sports)</summary>
+    <summary>Play videos of different sports streaming sites</summary>
     <description>Play videos of different sports streaming sites</description>
     <platform>all</platform>
   </extension>

@@ -144,7 +144,6 @@ def getInfo(item, params, src):
     paramArr = __parseParams(params)
     paramPage = paramArr[0].replace('%s', src)
 
-    paramPage = urllib.unquote(paramPage)
     if paramPage.startswith('@') and paramPage.endswith('@'):
         paramPage = item.getInfo(paramPage.strip('@'))
 

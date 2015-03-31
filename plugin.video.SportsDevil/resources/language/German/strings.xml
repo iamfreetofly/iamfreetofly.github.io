@@ -3,7 +3,7 @@
     <string id="30000">SportsDevil</string>
     <string id="30001">XBMC Media Center</string>
     <string id="30002">Deaktiviere den Haftungsausschluss</string>
-	<string id="30003">Player Typ</string>
+    <string id="30003">Player Typ</string>
     <string id="30004">Allgemein</string>
     <string id="30005">Updates</string>
     <string id="30007">Video speichern</string>
@@ -16,7 +16,7 @@
     <string id="30014">Niedrig</string>
     <string id="30015">Standard</string>
     <string id="30016">Hoch</string>
-    <string id="30017">Download Pfad auswählen:</string>	
+    <string id="30017">Download Pfad auswählen:</string>
 
     <string id="30050">Lade video herunter...</string>
     <string id="30051">Bitte warten.</string>
@@ -62,13 +62,13 @@
     <string id="30270">Autoplay</string>
     <string id="30271">Beim Start automatisch updaten</string>
     <string id="30272">Updates suchen</string>
-	<string id="30273">Keine Updates verfügbar</string>
-	<string id="30274">Update fehlgeschlagen</string>
-	<string id="30275">Suche nach Updates...</string>
-	<string id="30276">Update verfügbar</string>
-	<string id="30277">Updates verfügbar</string>	
-	<string id="30278">Jetzt installieren?</string>
-	<string id="30279">Installiere...</string>	
+    <string id="30273">Keine Updates verfügbar</string>
+    <string id="30274">Update fehlgeschlagen</string>
+    <string id="30275">Suche nach Updates...</string>
+    <string id="30276">Update verfügbar</string>
+    <string id="30277">Updates verfügbar</string>
+    <string id="30278">Jetzt installieren?</string>
+    <string id="30279">Installiere...</string>
     <string id="30280">fehlgeschlagen</string>
     
 

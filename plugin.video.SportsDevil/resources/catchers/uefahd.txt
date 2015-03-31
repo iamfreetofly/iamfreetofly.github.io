@@ -38,5 +38,5 @@ item_info_convert=replace('%s','redirect','vod')
 item_info_build=%s
 
 item_info_name=url
-item_info_from=rtmp.tmp + ' playpath='+ file + ' swfUrl=http://thebestplayeronline.com/jwplayer5/addplayer/jwplayer.flash.swf live=true flashver=WIN%252011,8,800,168 token=@@stop-stole@@ timeout=15 pageUrl=http://www.uefahd.com
+item_info_from=rtmp.tmp + ' playpath='+ file + ' swfUrl=http://thebestplayeronline.com/jwplayer5/addplayer/jwplayer.flash.swf live=true flashver=WIN\2017,0,0,134 token=@@stop-stole@@ timeout=15 pageUrl=http://www.uefahd.com
 item_info_build=%s

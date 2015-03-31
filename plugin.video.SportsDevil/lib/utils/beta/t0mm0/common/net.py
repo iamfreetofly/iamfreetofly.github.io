@@ -27,6 +27,15 @@ import socket
 #Set Global timeout - Useful for slow connections and Putlocker.
 socket.setdefaulttimeout(30)
 
+#use ipv4 only
+origGetAddrInfo = socket.getaddrinfo
+
+def getAddrInfoWrapper(host, port, family=0, socktype=0, proto=0, flags=0):
+    return origGetAddrInfo(host, port, socket.AF_INET, socktype, proto, flags)
+
+# replace the original socket.getaddrinfo by our version
+socket.getaddrinfo = getAddrInfoWrapper
+
 class HeadRequest(urllib2.Request):
     '''A Request class that sends HEAD requests'''
     def get_method(self):
@@ -48,8 +57,8 @@ class Net:
     
     _cj = cookielib.LWPCookieJar()
     _proxy = None
-    _user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 ' + \
-                  '(KHTML, like Gecko) Chrome/33.0.1750.154 Safari/537.36'
+    _user_agent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 ' + \
+                  '(KHTML, like Gecko) Chrome/41.0.2272.89 Safari/537.36'
     _http_debug = False
     
     
