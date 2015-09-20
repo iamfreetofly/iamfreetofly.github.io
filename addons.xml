@@ -24,6 +24,23 @@
   </extension>
 </addon>
 
+<addon id="plugin.video.tvbdo" version="1.0.30" name="HDFree.Co" provider-name="Iamfreetofly">
+  <requires>
+    <import addon="xbmc.python" version="2.1" />
+    <import addon="script.module.simplejson" />
+    <import addon="script.module.t0mm0.common" version="1.1.0" />
+    <import addon="script.module.urlresolver" />
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="default.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary>TVBdo.com</summary>
+    <description>Watch HDFree.Co (HK - Cantonese) Videos</description>
+    <platform>all</platform>
+  </extension>
+</addon>
+
 <addon id="plugin.video.tvbdo" version="1.0.9" name="Kazeebo.com" provider-name="Iamfreetofly">
   <requires>
     <import addon="xbmc.python" version="2.0" />
@@ -64,12 +81,12 @@
 
 <addon
   id="plugin.video.SportsDevil"
-  version="1.8.8.2"
+  version="2015.09.16.0"
   name="SportsDevil"
-  provider-name="MaxMustermann">
+  provider-name="MaxMustermann,Al101,Hubbab3,Sattekop">
   <requires>
-   <import addon="xbmc.python" version="2.1.0"/>
-   <import addon="script.common.plugin.cache" version="0.9.1"/>
+   <import addon="xbmc.python" version="2.14.0"/>
+   <import addon="script.module.requests" />
   </requires>
   <extension
     point="xbmc.python.pluginsource"
