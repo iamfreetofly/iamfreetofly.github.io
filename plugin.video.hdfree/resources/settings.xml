@@ -1,10 +1,12 @@
 <settings>
    <category label="Addon-Settings">
-  	<setting id="enableProxy" type="bool" label="Enable Proxy" default="false"/>
-    <setting id="region" type="enum" values="USA|Romainia|Germany|England" label="Proxy Region" default="0" enable="true" />
+		<setting id="domainurl" type="enum" values="hdfree.co" label="30200" default="0" enable="true" />
+		<setting id="display_mirrors" type="bool" label="30201" default="true"/>
+		<setting id="list_hk_dramas" type="bool" label="30202" default="true"/>
    </category>
-<category label="Auto-View">
-  <setting id="ga_time" type="text" label="GA Called" default="2000-01-01 00:00:00" visible="false"/>
-  <setting id="ga_visitor" type="text" label="GA visitor" default="" visible="false"/>
-</category>
+	<category label="Auto-View">
+		<setting id="ga_privacy" type="bool" label="30100" default="false"/>
+		<setting id="ga_time" type="text" label="GA Called" default="2000-01-01 00:00:00" visible="false"/>
+		<setting id="ga_visitor" type="text" label="GA visitor" default="" visible="false"/>
+	</category>
 </settings>
