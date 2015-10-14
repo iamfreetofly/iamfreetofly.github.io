@@ -1,9 +1,33 @@
 <settings>
    <category label="Addon-Settings">
-    <setting id="domainurl" type="enum" values="azdrama.net|www.azdrama.info|www1.azdrama.net" label="domain" default="0" enable="true" />
+		<setting id="domainurl" type="enum" values="hdfree.co" label="30200" default="0" enable="true" />
+		<setting id="display_mirrors" type="bool" label="30201" default="true"/>
+		<setting id="list_hk_dramas" type="bool" label="30202" default="true"/>
+		<setting id="list_hk_movies" type="bool" label="30203" default="true"/>
+		<setting id="list_hk_shows" type="bool" label="30204" default="true"/>
+		<setting id="list_china_dramas" type="bool" label="30205" default="true"/>
+		<setting id="list_china_movies" type="bool" label="30206" default="true"/>
+		<setting id="list_china_shows" type="bool" label="30207" default="true"/>
+		<setting id="list_taiwan_dramas" type="bool" label="30208" default="true"/>
+		<setting id="list_taiwan_movies" type="bool" label="30209" default="true"/>
+		<setting id="list_taiwan_shows" type="bool" label="30210" default="true"/>
+		<setting id="list_english_dramas" type="bool" label="30211" default="true"/>
+		<setting id="list_english_movies" type="bool" label="30212" default="true"/>
+		<setting id="list_english_shows" type="bool" label="30213" default="true"/>
+		<setting id="list_korean_dramas" type="bool" label="30214" default="true"/>
+		<setting id="list_korean_movies" type="bool" label="30215" default="true"/>
+		<setting id="list_korean_shows" type="bool" label="30216" default="true"/>
+		<setting id="list_japanese_dramas" type="bool" label="30217" default="true"/>
+		<setting id="list_japanese_movies" type="bool" label="30218" default="true"/>
+		<setting id="list_japanese_shows" type="bool" label="30219" default="true"/>
+		<setting id="list_taiwan_dramas" type="bool" label="30220" default="true"/>
+		<setting id="list_taiwan_movies" type="bool" label="30221" default="true"/>
+		<setting id="list_taiwan_shows" type="bool" label="302022" default="true"/>
    </category>
-<category label="Auto-View">
-  <setting id="ga_time" type="text" label="GA Called" default="2000-01-01 00:00:00" visible="false"/>
-  <setting id="ga_visitor" type="text" label="GA visitor" default="" visible="false"/>
-</category>
+	<category label="Auto-View">
+		<setting id="ga_privacy" type="bool" label="30100" default="false"/>
+		<setting id="ga_time" type="text" label="GA Called" default="2000-01-01 00:00:00" visible="false"/>
+		<setting id="ga_visitor" type="text" label="GA visitor" default="" visible="false"/>
+	</category>
 </settings>
+
