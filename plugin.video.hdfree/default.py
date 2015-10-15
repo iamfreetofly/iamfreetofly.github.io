@@ -86,7 +86,7 @@ def INDEX(url):
         try:
             link =link.encode("UTF-8")
         except: pass
-        newlink = ''.join(link.splitlines()).replace('\t','').replace('<span aria-hidden="true">\xc2\xab</span>','Previous').replace('<span aria-hidden="true">\xc2\xbb</span>','Next').replace('<strong style="color:Red">','').replace('</strong>','').replace('&#39;','\'')
+        newlink = ''.join(link.splitlines()).replace('\t','').replace('<span aria-hidden="true">\xc2\xab</span>','Previous').replace('<span aria-hidden="true">\xc2\xbb</span>','Next').replace('<strong style="color:Red">','').replace('</strong>','').replace('&#39;','\'').replace('amp;','')
         listcontent=re.compile('<body>(.+?)</body>').findall(newlink)
         match=re.compile('<div class="v-grid">(.+?)<a href="(.+?)" [^>]*><img alt="(.+?)" src="(.+?)" [^>]*></a>').findall(listcontent[0])
         for (vtmp,vurl,vname,vimg) in match:
@@ -107,7 +107,7 @@ def INDEX2(url):
         try:
             link =link.encode("UTF-8")
         except: pass
-        newlink = ''.join(link.splitlines()).replace('\t','').replace('<span aria-hidden="true">\xc2\xab</span>','Previous').replace('<span aria-hidden="true">\xc2\xbb</span>','Next').replace('<strong style="color:Red">','').replace('</strong>','').replace('&#39;','\'')
+        newlink = ''.join(link.splitlines()).replace('\t','').replace('<span aria-hidden="true">\xc2\xab</span>','Previous').replace('<span aria-hidden="true">\xc2\xbb</span>','Next').replace('<strong style="color:Red">','').replace('</strong>','').replace('&#39;','\'').replace('amp;','')
         listcontent=re.compile('<body>(.+?)</body>').findall(newlink)
         match=re.compile('<div class="v-grid">(.+?)<a href="(.+?)" [^>]*><img alt="(.+?)" src="(.+?)" [^>]*></a>').findall(listcontent[0])
         for (vtmp,vurl,vname,vimg) in match:
@@ -233,7 +233,7 @@ def Episodes(url,name,newmode):
         try:
             link =link.encode("UTF-8")
         except: pass
-        newlink = ''.join(link.splitlines()).replace('\n\t','').replace('&#39;','\'')
+        newlink = ''.join(link.splitlines()).replace('\n\t','').replace('&#39;','\'').replace('amp;','')
         listcontent=re.compile('<div style="border-bottom:1px [^>]*>Show all available episodes</div>(.+?)<div style="border-bottom:1px [^>]*>Share with your friends to support us[^>]*</div>').findall(newlink)
         if(newmode==7):
             vidmode=3
@@ -1433,8 +1433,19 @@ def loadVideos(url,name):
                     Videosresolve(vidlink,name)
                     addDir2("GoogleVideo | Unknown Quality",vidlink,8,"")
 		elif(redirlink.find("openload.co") > 0):
-                    Videosresolve(vidlink,name)
-                    addDir2("OpenLoad | Unknown Quality",vidlink,8,"")
+##                    sources = []
+##                    label=name
+##                    hosted_media = urlresolver.HostedMediaFile(url=redirlink, title=label)
+##                    sources.append(hosted_media)
+##                    source = urlresolver.choose_source(sources)
+##                    print "inresolver=" + url
+##                    if source:
+##                            newvidlink = source.resolve()
+##                    else:
+##                            newvidlink =""
+                    
+##                    Videosresolve(vidlink,name)
+                    addDir2("OpenLoad | Unknown Quality",redirlink,13,"")
                 else:
                     if vidlink != "":
                         addDir2("Googlecontent | Unknown Quality",vidlink,8,"")
@@ -1457,7 +1468,11 @@ def ResolveUrl(url,name):
             vidlink =""
 
         xbmcPlayer = xbmc.Player()
-        xbmcPlayer.play(vidlink)
+        try:
+            xbmcPlayer.play(vidlink)
+        except:
+            d = xbmcgui.Dialog()
+            d.ok(url,"Letters for captcha incorrect",'Try again')
 		
 def parseDate(dateString):
     try:
@@ -1761,5 +1776,7 @@ elif mode==11:
 elif mode==12:
        GA("INDEX2",name)      
        INDEX2(url)
+elif mode==13:
+       ResolveUrl(url,name)
 
 xbmcplugin.endOfDirectory(int(sysarg))
