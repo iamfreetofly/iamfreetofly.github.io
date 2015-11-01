@@ -15,7 +15,7 @@ sky_uk_sports_news_hq.png
 british_eurosport_2.png
   Eurosport 2
 british_eurosport.png
-  Eurosport
+  Eurosport 1
 bt_sport_1.png
   BT Sport 1
 bt_sport_2.png
@@ -34,3 +34,7 @@ premier_sports.png
   Premier Sports
 at_the_races_uk.png
   At The Races
+bt_sport_europe_uk.png
+  BT Sport Europe
+bt_sport_uk_espn.png
+  BT Sport ESPN

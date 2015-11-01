@@ -25,6 +25,9 @@ BT Sport 1
 BT Sport 2
   Bt Sport 2
   BT Sport2
+BT Sport Europe
+  Bt Sport Europe
+  BT Europe
 Channel 1
   Channel1 Football
 Channel 2
@@ -55,9 +58,10 @@ Channel 14
   C14 Barcelona
 Channel 15
   C15 Real Madrid
-Eurosport
+Eurosport 1
   Euro Sports
   Euro Sport
+  Euro Sport 1
   Eurosport 1
 Eurosport 2
   Euro Sport 2
@@ -74,8 +78,9 @@ Sportsnet One
 Sportsnet Ontario
 ESPN USA
   Espn Usa
-ESPN
+BT Sport ESPN
   Espn
+  ESPN UK
 ESPN2
   Espn2
 TEN Sports
