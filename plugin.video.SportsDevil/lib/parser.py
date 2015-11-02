@@ -226,10 +226,10 @@ class Parser(object):
                         if not jsUrl.startswith('http://'):
                             jsUrl = urllib.basejoin(startUrl,jsUrl)
                         streamerName = getHostName(jsUrl)
-                        jsSource = getHTML(jsUrl, None, startUrl)
+                        jsSource = getHTML(jsUrl, None, startUrl, True, False, False)
                         phpUrl = findPHP(jsSource, streamId)
                         if phpUrl:
-                            data = getHTML(phpUrl, None, startUrl)
+                            data = getHTML(phpUrl, None, startUrl, True, False, True)
                             item = self.__findRTMP(data, phpUrl, lItem)
                             if item:
                                 
@@ -304,7 +304,7 @@ class Parser(object):
 
 
     def __findRedirect(self, page, referer='', demystify=False):
-        data = common.getHTML(page, None, referer=referer, xml=False, mobile=False, demystify=demystify)
+        data = common.getHTML(page, None, referer = referer, xml = False, mobile=False, demystify = demystify)
         
         if findVideoFrameLink(page, data):
             return findVideoFrameLink(page, data)
@@ -479,7 +479,7 @@ class Parser(object):
                                     if t.find('\'') != -1:
                                         src = src + t.strip('\'')
                                     else:
-                                        src = src + (tmp[t] or '')
+                                        src = src + tmp[t]
                             elif info.src.__contains__('||'):
                                 variables = info.src.split('||')
                                 src = firstNonEmpty(tmp, variables)
