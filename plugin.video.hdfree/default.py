@@ -1446,6 +1446,8 @@ def loadVideos(url,name):
                     
 ##                    Videosresolve(vidlink,name)
                     addDir2("OpenLoad | Unknown Quality",redirlink,13,"")
+		elif(redirlink.find("ok.ru") > 0):
+                    addDir2("Ok.ru | Unknown Quality",redirlink,13,"")
                 else:
                     if vidlink != "":
                         addDir2("Googlecontent | Unknown Quality",vidlink,8,"")
