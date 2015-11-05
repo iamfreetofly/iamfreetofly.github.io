@@ -1478,6 +1478,9 @@ def okru_streams(url):
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     }
 
+    URL = {}
+    URL['base']	= strdomain
+
     id = re.search('\d+', url).group(0)
     json_url = 'http://ok.ru/dk?cmd=videoPlayerMetadata&mid=' + id
 

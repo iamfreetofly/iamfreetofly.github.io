@@ -26,7 +26,7 @@
 
 <addon
   id="plugin.video.hdfree"
-  version="1.0.7"
+  version="1.0.8"
   name="HDFree.Co"
   provider-name="Iamfreetofly">
   <requires>
