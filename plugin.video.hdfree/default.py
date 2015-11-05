@@ -1448,7 +1448,7 @@ def loadVideos(url,name):
                     addDir2("OpenLoad | Unknown Quality",redirlink,13,"")
 		elif(redirlink.find("ok.ru") > 0):
                     okru_streams(vidlink)
-                    addDir2("Ok.ru | Unknown Quality",redirlink,13,"")
+##                    addDir2("Ok.ru | Unknown Quality",redirlink,13,"")
                 else:
                     if vidlink != "":
                         addDir2("Googlecontent | Unknown Quality",vidlink,8,"")
@@ -1457,17 +1457,17 @@ def _okru_to_res(string):
     string = string.strip()
     resolution = string
     if string == 'full':
-        resolution = '1080p'
+        resolution = 'Ok.ru | 1080p'
     elif string == 'hd':
-        resolution = '720p'
+        resolution = 'Ok.ru | 720p'
     elif string == 'sd':
-        resolution = '480p'
+        resolution = 'Ok.ru | 480p'
     elif string == 'low':
-        resolution = '360p'
+        resolution = 'Ok.ru | 360p'
     elif string == 'lowest':
-        resolution = '240p'
+        resolution = 'Ok.ru | 240p'
     elif string == 'mobile':
-        resolution = '144p'
+        resolution = 'Ok.ru | 144p'
 
     return resolution
 
@@ -1494,12 +1494,13 @@ def okru_streams(url):
         link = '%s|User-Agent=%s&Accept=%s'
         link = link % (source['url'], HEADERS['User-Agent'], HEADERS['Accept'])
         item = (name, link)
-        sources.append(item)
-
-    print ("============================ POSTING okru sources ============================")
-    print sources
-
-    return sources
+##        sources.append(item)
+        addDir2(name,link,8,"")
+##
+##    print ("============================ POSTING okru sources ============================")
+##    print sources
+##
+##    return sources
 
 
 def ResolveUrl(url,name):
