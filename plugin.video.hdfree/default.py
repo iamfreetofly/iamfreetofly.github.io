@@ -1453,6 +1453,25 @@ def loadVideos(url,name):
                     if vidlink != "":
                         addDir2("Googlecontent | Unknown Quality",vidlink,8,"")
 
+def _okru_to_res(string):
+    string = string.strip()
+    resolution = string
+    if string == 'full':
+        resolution = '1080p'
+    elif string == 'hd':
+        resolution = '720p'
+    elif string == 'sd':
+        resolution = '480p'
+    elif string == 'low':
+        resolution = '360p'
+    elif string == 'lowest':
+        resolution = '240p'
+    elif string == 'mobile':
+        resolution = '144p'
+
+    return resolution
+
+
 def okru_streams(url):
     HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
