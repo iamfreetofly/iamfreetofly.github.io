@@ -1491,14 +1491,16 @@ def okru_streams(url):
     sources = []
     for source in json_source['videos']:
         name = _okru_to_res(source['name'])
-        link = '%s|User-Agent=%s&Accept=%s'
-        link = link % (source['url'], HEADERS['User-Agent'], HEADERS['Accept'])
+##        link = '%s|User-Agent=%s&Accept=%s'
+##        link = link % (source['url'], HEADERS['User-Agent'], HEADERS['Accept'])
+        link = '%s|User-Agent=%s&Accept=%s&Referer=%s'
+	link = link % (source['url'], HEADERS['User-Agent'], HEADERS['Accept'], urllib.quote_plus(URL['base']))
         item = (name, link)
-##        sources.append(item)
+        sources.append(item)
         addDir2(name,link,8,"")
 ##
-##    print ("============================ POSTING okru sources ============================")
-##    print sources
+    print ("============================ POSTING okru sources ============================")
+    print sources
 ##
 ##    return sources
 
