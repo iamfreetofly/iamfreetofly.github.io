@@ -29,6 +29,12 @@ domain = domainlist[int(ADDON.getSetting('domainurl'))]
 domainprefix = ["http://"]
 strdomain = "http://hdfree.co/"
 
+HEADERS = {
+        'User-Agent':    'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
+        'Accept':                'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Cache-Control': 'no-transform'
+}
+
 def __init__(self):
     self.playlist=sys.modules["__main__"].playlist
 def HOME():
@@ -1446,12 +1452,45 @@ def loadVideos(url,name):
                     
 ##                    Videosresolve(vidlink,name)
                     addDir2("OpenLoad | Unknown Quality",redirlink,13,"")
+
+		elif(redirlink.find("vk.com") > 0):
+
+                    addDir2("vk.com | Unknown Quality",redirlink,13,"")
+                    
 		elif(redirlink.find("ok.ru") > 0):
-                    okru_streams(vidlink)
-##                    addDir2("Ok.ru | Unknown Quality",redirlink,13,"")
+                    oklink = okru_streams(vidlink,redirlink)
+                    print ("============================ POSTING oklink sources ============================")
+                    print oklink
+                    
+                    labels = []
+                    
+                    for item in oklink:
+                            labels.append(item['name'])
+                    
+                    dialog = xbmcgui.Dialog()
+                    
+                    index = dialog.select('Select video source', labels)
+                    if index > -1:
+                            playStream(oklink[index]['url'], "", "")
+                    else:
+                            return
+
                 else:
                     if vidlink != "":
                         addDir2("Googlecontent | Unknown Quality",vidlink,8,"")
+
+def playStream(url,title,thumbnail):
+        print ("============================ POSTING oklink url ============================")
+        print url
+        win = xbmcgui.Window(10000)
+        win.setProperty('hdfree.playing.title', title.lower())
+        
+        item = xbmcgui.ListItem(title, iconImage="DefaultVideo.png", thumbnailImage=thumbnail)
+        item.setInfo(type = "Video", infoLabels = {"title": title})
+        
+        xbmc.Player().play(item=url, listitem=item)
+        
+        return True
 
 def _okru_to_res(string):
     string = string.strip()
@@ -1472,41 +1511,46 @@ def _okru_to_res(string):
     return resolution
 
 
-def okru_streams(url):
-    HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    }
+def okru_streams(url,redirlink):
+##    HEADERS = {
+##        'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
+##        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+##    }
 
     URL = {}
-    URL['base']	= strdomain
+    URL['base']	= redirlink
 
     id = re.search('\d+', url).group(0)
-    json_url = 'http://ok.ru/dk?cmd=videoPlayerMetadata&mid=' + id
-
-    req = urllib2.Request(json_url, headers=HEADERS)
-    response = urllib2.urlopen(req)
-    source = response.read()
-    response.close()
-
-    json_source = json.loads(source)
+    jsonUrl = 'http://ok.ru/dk?cmd=videoPlayerMetadata&mid=' + id
+    jsonSource = json.loads(http_req(jsonUrl))
 
     sources = []
-    for source in json_source['videos']:
+    for source in jsonSource['videos']:
         name = _okru_to_res(source['name'])
-##        link = '%s|User-Agent=%s&Accept=%s'
-##        link = link % (source['url'], HEADERS['User-Agent'], HEADERS['Accept'])
         link = '%s|User-Agent=%s&Accept=%s&Referer=%s'
-	link = link % (source['url'], HEADERS['User-Agent'], HEADERS['Accept'], urllib.quote_plus(URL['base']))
-        item = (name, link)
+        link = link % (source['url'], HEADERS['User-Agent'], HEADERS['Accept'], urllib.quote_plus(URL['base']))
+        item = {'name': name, 'url': link}
         sources.append(item)
-        addDir2(name,link,8,"")
-##
+        
+##        addDir2(name,link,8,"")
+        
     print ("============================ POSTING okru sources ============================")
     print sources
-##
-##    return sources
 
+    return sources
+
+def http_req(url, getCookie=False, data=None, customHeader=None):
+        if data: data = urllib.urlencode(data)
+        if customHeader:
+                req = urllib2.Request(url, data, customHeader)
+        req = urllib2.Request(url, data, HEADERS)
+        response = urllib2.urlopen(req)
+        source = response.read()
+        response.close()
+        if getCookie:
+                cookie = response.headers.get('Set-Cookie')
+                return {'source': source, 'cookie': cookie}
+        return source
 
 def ResolveUrl(url,name):
         sources = []
