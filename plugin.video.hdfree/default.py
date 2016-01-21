@@ -1434,7 +1434,6 @@ def loadVideos(url,name):
                 elif(len(match3) > 0):
                     vidlink = match3[0]
                     loadVideos(vidlink,"")
-                    break
                 elif(len(match4) > 0):
                     vidlink = match4[0]
                 else:
