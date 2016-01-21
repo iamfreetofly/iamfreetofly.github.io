@@ -245,8 +245,8 @@ def Episodes(url,name,newmode):
             vidmode=3
         else:
             vidmode=9
-        match=re.compile('<a href="(.+?)" [^>]* title="(.+?)">(.+?)Watch Online(.+?)</a>').findall(listcontent[0])
-        for (vurl,vname,vtmp,vtmp2) in match:
+        match=re.compile('<a href="(.+?)" [^>]* title="(.+?)">(.+?)</a>').findall(listcontent[0])
+        for (vurl,vtmp,vname) in match:
             try:
                   addDir(vname,"http://"+domain+vurl,vidmode,"")
                   break
