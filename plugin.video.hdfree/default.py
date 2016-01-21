@@ -246,7 +246,7 @@ def Episodes(url,name,newmode):
         else:
             vidmode=9
         match=re.compile('<a href="(.+?)" [^>]* title="(.+?)">(.+?)</a>').findall(listcontent[0])
-        for (vurl,vtmp,vname) in match:
+        for (vurl,vname,vtmp) in match:
             try:
                   addDir(vname,"http://"+domain+vurl,vidmode,"")
                   break
@@ -1425,10 +1425,18 @@ def loadVideos(url,name):
 ##		print match2
 		#ParseVideoLink(match,name,"")
 		#vidlink=Videosresolve(match[0],name)
+		match3=re.compile('</h1>\s*<iframe src="(.+?)" [^>]*>').findall(newlink)
+		match4=re.compile('<input type="button" value="Download" [^>]*\'(.+?)\',[^>]*>').findall(newlink)
 		if(len(match) > 0):
                     vidlink = match[0]
                 elif(len(match2) > 0):
                     vidlink = match2[0]
+                elif(len(match3) > 0):
+                    vidlink = match3[0]
+                    loadVideos(vidlink,"")
+                    break
+                elif(len(match4) > 0):
+                    vidlink = match4[0]
                 else:
                     vidlink = ""
 ##		print ("============================ POSTING vidlink ============================")
