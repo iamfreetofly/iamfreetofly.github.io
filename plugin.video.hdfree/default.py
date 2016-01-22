@@ -1438,7 +1438,8 @@ def loadVideos(url,name):
                 elif(len(match4) > 0):
                     vidlink = match4[0]
                 elif(len(match5) > 0):
-                    vidlink = match5[0]    
+                    vidlink2 = match5[0]
+                    addDir2("Content | Unknown Quality",vidlink2,8,"")
                 else:
                     vidlink = ""
 ##		print ("============================ POSTING vidlink ============================")
