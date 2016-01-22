@@ -1433,8 +1433,8 @@ def loadVideos(url,name):
                 elif(len(match2) > 0):
                     vidlink = match2[0]
                 elif(len(match3) > 0):
-                    vidlink2 = match3[0]
-                    loadVideos(vidlink2,"")
+                    vidlink = match3[0]
+                    loadVideos(vidlink,"")
                 elif(len(match4) > 0):
                     vidlink = match4[0]
                 elif(len(match5) > 0):
