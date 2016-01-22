@@ -1427,15 +1427,18 @@ def loadVideos(url,name):
 		#vidlink=Videosresolve(match[0],name)
 		match3=re.compile('</h1>\s*<iframe src="(.+?)" [^>]*>').findall(newlink)
 		match4=re.compile('<input type="button" value="Download" [^>]*\'(.+?)\',[^>]*>').findall(newlink)
+		match5=re.compile('<source src="(.+?)" [^>]*>').findall(newlink)
 		if(len(match) > 0):
                     vidlink = match[0]
                 elif(len(match2) > 0):
                     vidlink = match2[0]
                 elif(len(match3) > 0):
-                    vidlink = match3[0]
-                    loadVideos(vidlink,"")
+                    vidlink2 = match3[0]
+                    loadVideos(vidlink2,"")
                 elif(len(match4) > 0):
                     vidlink = match4[0]
+                elif(len(match5) > 0):
+                    vidlink = match5[0]    
                 else:
                     vidlink = ""
 ##		print ("============================ POSTING vidlink ============================")
