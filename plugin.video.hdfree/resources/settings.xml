@@ -1,6 +1,6 @@
 <settings>
    <category label="Addon-Settings">
-		<setting id="domainurl" type="enum" values="hdfree.co" label="30200" default="0" enable="true" />
+		<setting id="domainurl" type="enum" values="azdrama.biz" label="30200" default="0" enable="true" />
 		<setting id="display_mirrors" type="bool" label="30201" default="true"/>
 		<setting id="list_hk_dramas" type="bool" label="30202" default="true"/>
 		<setting id="list_hk_movies" type="bool" label="30203" default="true"/>

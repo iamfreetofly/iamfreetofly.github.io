@@ -20,39 +20,48 @@
 """
 
 import re
-from t0mm0.common.net import Net
+import urllib
+import urllib2
+from lib import jsunpack
 from urlresolver import common
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
+from urlresolver.resolver import UrlResolver, ResolverError
 
-class VideoMegaResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class VideoMegaResolver(UrlResolver):
     name = "videomega"
     domains = ["videomega.tv"]
-    pattern = '//((?:www.)?videomega.tv)/(?:(?:iframe|cdn|validatehash|view)\.php)?\?(?:ref|hashkey)=([a-zA-Z0-9]+)'
+    pattern = '(?://|\.)(videomega\.tv)/(?:(?:iframe|cdn|validatehash|view)\.php)?\?(?:ref|hashkey)=([a-zA-Z0-9]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         headers = {
-                   'User-Agent': common.IOS_USER_AGENT,
-                   'Referer': web_url
+            'User-Agent': common.IOS_USER_AGENT,
+            'Referer': web_url
         }
-        
-        html = self.net.http_GET(web_url, headers=headers).content
-        match = re.search('<source\s+src="([^"]+)', html)
-        if match:
-            return match.group(1) + '|User-Agent=%s' % (common.IOS_USER_AGENT)
 
-        raise UrlResolver.ResolverError('No playable video found.')
+        html = self.net.http_GET(web_url, headers=headers).content
+        if jsunpack.detect(html):
+            js_data = jsunpack.unpack(html)
+            match = re.search('"src"\s*,\s*"([^"]+)', js_data)
+
+        try:
+            stream_url = match.group(1)
+
+            r = urllib2.Request(stream_url, headers=headers)
+            r = int(urllib2.urlopen(r, timeout=15).headers['Content-Length'])
+
+            if r > 1048576:
+                stream_url += '|' + urllib.urlencode(headers)
+                return stream_url
+        except:
+            ResolverError("File Not Playable")
+
+        raise ResolverError('No playable video found.')
 
     def get_url(self, host, media_id):
-        return 'http://videomega.tv/cdn.php?ref=%s' % (media_id)
+        return 'http://videomega.tv/cdn.php?ref=%s' % media_id
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
@@ -62,5 +71,4 @@ class VideoMegaResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.search(self.pattern, url) or 'videomega' in host
+        return re.search(self.pattern, url) or self.name in host

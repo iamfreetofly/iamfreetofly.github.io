@@ -15,39 +15,44 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import re
-from t0mm0.common.net import Net
-from urlresolver import common
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
 
-class VideowoodResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+import re
+from lib import jsunpack
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
+
+class VideowoodResolver(UrlResolver):
     name = "videowood"
     domains = ['videowood.tv']
-    pattern = '//((?:www.)?videowood.tv)/(?:embed/|video/)([0-9a-z]+)'
+    pattern = '(?://|\.)(videowood\.tv)/(?:embed/|video/)([0-9a-z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        html = self.net.http_GET(web_url).content
+        stream_url = None
+        headers = {'Referer': web_url}
+        html = self.net.http_GET(web_url, headers=headers).content
         if "This video doesn't exist." in html:
-            raise UrlResolver.ResolverError('The requested video was not found.')
-
-        pattern = "file\s*:\s*'([^']+/video/[^']+)"
-        match = re.search(pattern, html)
-        if match:
-            return match.group(1)
-    
-        raise UrlResolver.ResolverError('No video link found.')
+            raise ResolverError('The requested video was not found.')
+        packed = re.search('(eval\(function\(p,a,c,k,e,d\)\{.+\))', html)
+        unpacked = None
+        if packed:
+            # change radix before trying to unpack, 58-61 seen in testing, 62 worked for all
+            packed = re.sub(r"(.+}\('.*', *)\d+(, *\d+, *'.*?'\.split\('\|'\))", "\g<01>62\g<02>", packed.group(1))
+            unpacked = jsunpack.unpack(packed)
+        if unpacked:
+            r = re.search('.+["\']file["\']\s*:\s*["\'](.+?/video\\\.+?)["\']', unpacked)
+            if r:
+                stream_url = r.group(1).replace('\\', '')
+        if stream_url:
+            return stream_url
+        else:
+            raise ResolverError('File not found')
 
     def get_url(self, host, media_id):
-        return 'http://%s/embed/%s' % (host, media_id)
+        return 'http://videowood.tv/embed/%s' % media_id
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
@@ -57,5 +62,4 @@ class VideowoodResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.search(self.pattern, url) or 'filehoot' in host
+        return re.search(self.pattern, url) or self.name in host

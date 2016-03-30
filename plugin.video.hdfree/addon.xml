@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon
   id="plugin.video.hdfree"
-  version="1.0.14"
+  version="1.0.37"
   name="HDFree.Co"
   provider-name="Iamfreetofly">
   <requires>
@@ -9,7 +9,7 @@
 		<import addon="script.module.beautifulsoup" version="3.0.8"/>
 		<import addon="script.module.simplejson" />
 		<import addon="script.module.t0mm0.common" version="1.1.0"/>
-		<import addon="script.module.urlresolver" version="2.10.3"/>
+		<import addon="script.module.urlresolver"/>
   </requires>
   <extension point="xbmc.python.pluginsource"
             library="default.py">
@@ -17,7 +17,7 @@
   </extension>
   <extension point="xbmc.addon.metadata">
     <summary>HDFree.Co</summary>
-    <description>Watch HDFree.Co (Chinese)Videos</description>
+    <description>Watch Veuue.Se (Chinese)Videos</description>
     <platform>all</platform>
   </extension>
 </addon>

@@ -17,26 +17,17 @@
 """
 
 import re
-import urllib2
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-from urlresolver import common
 from lib import jsunpack
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-
-class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class MovDivxResolver(UrlResolver):
     name = "movdivx"
     domains = ["movdivx.com"]
+    pattern = '(?://|\.)(movdivx\.com)/([0-9a-zA-Z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        #e.g. http://movdivx.com/trrrw4r6bjqu/American_Dad__s_1_e_3_p1-1.flv.html
-        self.pattern = 'http://(?:www.)?(movdivx.com)/(.+?).html'
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
@@ -47,7 +38,7 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
             key, value = match.groups()
             data[key] = value
         data['method_free'] = 'Continue to Stream >>'
-        
+
         html = self.net.http_POST(web_url, data).content
 
         # get url from packed javascript
@@ -63,10 +54,10 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
                 if match:
                     return match.group(1)
 
-        raise UrlResolver.ResolverError('failed to parse link')
+        raise ResolverError('failed to parse link')
 
     def get_url(self, host, media_id):
-            return 'http://movdivx.com/%s.html' % (media_id)
+        return 'http://movdivx.com/%s.html' % (media_id)
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
@@ -75,7 +66,5 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
         else:
             return False
 
-
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.search(self.pattern, url) or self.name in host

@@ -16,50 +16,50 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-from urlresolver import common
-from lib import captcha_lib
 import re
+from lib import jsunpack
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
 MAX_TRIES = 3
 
-class TwentyFourUploadingResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class TwentyFourUploadingResolver(UrlResolver):
     name = "24uploading"
     domains = ["24uploading.com"]
+    pattern = '(?://|\.)(24uploading\.com)/([0-9a-zA-Z/]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern = '//((?:www.)?24uploading\.com)/([0-9a-zA-Z/]+)'
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
-        
+
         tries = 0
         while tries < MAX_TRIES:
             data = {}
-            for match in re.finditer('input type="hidden" name="([^"]+)" value="([^"]+)', html):
+            for match in re.finditer(r'type="hidden"\s+name="(.+?)"\s+value="(.*?)"', html):
                 key, value = match.groups()
                 data[key] = value
             data['method_free'] = 'Free Download'
-            data.update(captcha_lib.do_captcha(html))
-            
+
             html = self.net.http_POST(web_url, form_data=data).content
-            match = re.search('class="btn_down.*?href="([^"]+)', html, re.DOTALL)
-            if match:
-                return match.group(1)
+
+            for match in re.finditer('(eval\(function.*?)</script>', html, re.DOTALL):
+                js_data = jsunpack.unpack(match.group(1))
+                js_data = js_data.replace('\\\'', '\'')
+
+                match2 = re.search("\"html5\".*?file\s*:\s*'([^']+)", js_data)
+                if match2:
+                    stream_url = match2.group(1)
+                    return stream_url
+
             tries += 1
 
-        raise UrlResolver.ResolverError('Unable to resolve 24uploading link. Filelink not found.')
+        raise ResolverError('Unable to resolve 24uploading link. Filelink not found.')
 
     def get_url(self, host, media_id):
-            return 'http://24uploading.com/%s' % (media_id)
+        return 'http://24uploading.com/%s' % (media_id)
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
@@ -69,4 +69,4 @@ class TwentyFourUploadingResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        return re.search(self.pattern, url) or self.name  in host
+        return re.search(self.pattern, url) or self.name in host

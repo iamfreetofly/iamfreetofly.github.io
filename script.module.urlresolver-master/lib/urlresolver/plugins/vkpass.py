@@ -17,70 +17,95 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 import re
 import xbmcgui
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
 from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-class VKPassResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class VKPassResolver(UrlResolver):
     name = "VKPass.com"
     domains = ["vkpass.com"]
+    pattern = '(?://|\.)(vkpass\.com)/token/(.+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern = '//((?:www.)?vkpass.com)/token/(.+)'
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         base_url = self.get_url(host, media_id)
         soup = self.net.http_GET(base_url).content
         html = soup.decode('cp1251')
         vBlocks = re.findall('{(file.*?label.*?)}', html)
+        html5 = re.findall('}\((.*?)\)\)<', html)
 
-        if vBlocks:
-            purged_jsonvars = {}
-            lines = []
-            best = '0'
+        if not vBlocks and not html5:
+            raise ResolverError('No vsource found')
 
-            for block in vBlocks:
-                vItems = re.findall('([a-z]*):"(.*?)"', block)
-                if vItems:
-                    quality = ''
-                    url = ''
+        data = dict()
+        data['purged_jsonvars'] = {}
+        data['lines'] = []
+        data['best'] = '0'
 
-                    for item in vItems:
-                        if 'file' in item[0]:
-                            url = item[1]
-                        if 'label' in item[0]:
-                            quality = re.sub("[^0-9]", "", item[1])
-                            lines.append(quality)
-                            if int(quality) > int(best): best = quality
+        if html5:
+            for source in html5:
+                params = source.split(',')
+                data = self.__decodeLinks(params[0], params[3].split('|'), data)
+        elif vBlocks:
+            data = self.__getFlashVids()
 
-                    purged_jsonvars[quality] = url
-                else:
-                    raise UrlResolver.ResolverError('No file found')
+        data['lines'] = sorted(data['lines'], key=int)
 
-            lines = sorted(lines, key=int)
-
-            if len(lines) == 1:
-                return purged_jsonvars[lines[0]].encode('utf-8')
-            else:
-                if self.get_setting('auto_pick') == 'true':
-                    return purged_jsonvars[str(best)].encode('utf-8') + '|User-Agent=%s' % (common.IE_USER_AGENT)
-                else:
-                    result = xbmcgui.Dialog().select('Choose the link', lines)
-            if result != -1:
-                return purged_jsonvars[lines[result]].encode('utf-8') + '|User-Agent=%s' % (common.IE_USER_AGENT)
-            else:
-                raise UrlResolver.ResolverError('No link selected')
+        if len(data['lines']) == 1:
+            return data['purged_jsonvars'][data['lines'][0]].encode('utf-8')
         else:
-            raise UrlResolver.ResolverError('No vsource found')
+            if self.get_setting('auto_pick') == 'true':
+                return data['purged_jsonvars'][str(data['best'])].encode('utf-8') + '|User-Agent=%s' % (common.IE_USER_AGENT)
+            else:
+                result = xbmcgui.Dialog().select('Choose the link', data['lines'])
+        if result != -1:
+            return data['purged_jsonvars'][data['lines'][result]].encode('utf-8') + '|User-Agent=%s' % (common.IE_USER_AGENT)
+        else:
+            raise ResolverError('No link selected')
+
+    def __decodeLinks(self, html, list, data):
+        if "source" not in list:
+            return data
+
+        numerals = "0123456789abcdefghijklmnopqrstuvwxyz"
+        letters = re.findall('([0-9a-z])', html)
+        for letter in letters:
+            html = re.sub('\\b' + letter + '\\b', list[numerals.index(letter)], html)
+
+        sources = re.findall('<source.*?>', html)
+
+        for source in sources:
+            url = re.findall('src="(.*?)"', source)
+            res = re.findall('res="(.*?)"', source)
+
+            data['lines'].append(res[0])
+            data['purged_jsonvars'][res[0]] = url[0]
+            if int(res[0]) > int(data['best']): data['best'] = res[0]
+
+        return data
+
+    def __getFlashVids(self, vBlocks, data):
+        for block in vBlocks:
+            vItems = re.findall('([a-z]*):"(.*?)"', block)
+            if vItems:
+                quality = ''
+                url = ''
+
+                for item in vItems:
+                    if 'file' in item[0]:
+                        url = item[1]
+                    if 'label' in item[0]:
+                        quality = re.sub("[^0-9]", "", item[1])
+                        data['lines'].append(quality)
+                        if int(quality) > int(data['best']): data['best'] = quality
+
+                data['purged_jsonvars'][quality] = url
+
+        return data
 
     def get_url(self, host, media_id):
-        return 'http://%s/token/%s' % (host, media_id)
+        return 'http://vkpass.com/token/%s' % media_id
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
@@ -90,11 +115,10 @@ class VKPassResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false':
-            return False
-        return re.search(self.pattern, url) or 'vkpass' in host
+        return re.search(self.pattern, url) or self.name in host
 
-    def get_settings_xml(self):
-        xml = PluginSettings.get_settings_xml(self)
-        xml += '<setting id="%s_auto_pick" type="bool" label="Automatically pick best quality" default="false" visible="true"/>' % (self.__class__.__name__)
+    @classmethod
+    def get_settings_xml(cls):
+        xml = super(cls, cls).get_settings_xml()
+        xml.append('<setting id="%s_auto_pick" type="bool" label="Automatically pick best quality" default="false" visible="true"/>' % (cls.__name__))
         return xml

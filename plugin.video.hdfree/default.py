@@ -9,7 +9,7 @@ import urlresolver
 import xbmcaddon,xbmcplugin,xbmcgui
 import base64
 import xbmc
-from urlparse import urljoin
+from urlparse import urljoin,urlsplit
 import datetime
 import time
 
@@ -24,10 +24,10 @@ UASTR = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.
 PATH = "HDFree"  #<---- PLUGIN NAME MINUS THE "plugin.video"          
 UATRACK="UA-41910477-1" #<---- GOOGLE ANALYTICS UA NUMBER   
 VERSION = "1.0" #<---- PLUGIN VERSION
-domainlist = ["hdfree.co"]
+domainlist = ["azdrama.biz"]
 domain = domainlist[int(ADDON.getSetting('domainurl'))]
 domainprefix = ["http://"]
-strdomain = "http://hdfree.co/"
+strdomain = "http://azdrama.biz/"
 
 HEADERS = {
         'User-Agent':    'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
@@ -240,7 +240,7 @@ def Episodes(url,name,newmode):
             link =link.encode("UTF-8")
         except: pass
         newlink = ''.join(link.splitlines()).replace('\n\t','').replace('&#39;','\'').replace('amp;','')
-        listcontent=re.compile('<div style="border-bottom:1px [^>]*>Show all available episodes</div>(.+?)<div style="border-bottom:1px [^>]*>Share with your friends to support us[^>]*</div>').findall(newlink)
+        listcontent=re.compile('<div style="border-bottom:1px [^>]*>Show all available episodes</div>(.+?)<div style="border-bottom:1px [^>]*>Please share[^>]*</div>').findall(newlink)
         if(newmode==7):
             vidmode=3
         else:
@@ -1427,23 +1427,41 @@ def loadVideos(url,name):
 		#vidlink=Videosresolve(match[0],name)
 		match3=re.compile('</h1>\s*<iframe src="(.+?)" [^>]*>').findall(newlink)
 		match4=re.compile('<input type="button" value="Download" [^>]*\'(.+?)\',[^>]*>').findall(newlink)
-		match5=re.compile('<source src="(.+?)" [^>]*>').findall(newlink)
+		match5=re.compile('<source src="(.+?)" type="video/mp4">').findall(newlink)
+		match6=re.compile('</h1>\s*</div>\s*<iframe src="(.+?)" [^>]*allowFullScreen></iframe>').findall(newlink)
+##		print ("============================ POSTING newlink ============================")
+##		print newlink
+##		print ("============================ POSTING match6 ============================")
+##		print match6
 		if(len(match) > 0):
                     vidlink = match[0]
                 elif(len(match2) > 0):
                     vidlink = match2[0]
-                elif(len(match3) > 0):
-                    vidlink = match3[0]
+##                elif(len(match3) > 0):
+##                    vidlink = match3[0]
+##                    loadVideos(vidlink,"")
+##                elif(len(match4) > 0):
+##                    vidlink = match4[0]
+##                    if(len(match5) > 0):
+##                        vidlink2 = match5[0]
+##                        print ("============================ POSTING vidlink2 ============================")
+##                        print vidlink2
+##                        base_url = "{0.scheme}://{0.netloc}/".format(urlsplit(url))
+##                        print(base_url)
+##                        vidlink3 = urljoin(url, vidlink2)
+##                        addDir2("Content | Unknown Quality",vidlink3,8,"")
+                elif(len(match6) > 0):
+                    vidlink = match6[0]
+##                    print ("============================ POSTING vidlink ============================")
+##                    print vidlink
                     loadVideos(vidlink,"")
                 elif(len(match4) > 0):
                     vidlink = match4[0]
-                elif(len(match5) > 0):
-                    vidlink2 = match5[0]
-                    addDir2("Content | Unknown Quality",vidlink2,8,"")
+##                    print ("============================ POSTING vidlink2 ============================")
+##                    print vidlink
                 else:
                     vidlink = ""
-##		print ("============================ POSTING vidlink ============================")
-##		print vidlink
+
                 redirlink = vidlink
                 if(redirlink.find("googlevideo.com") > 0):
                     vidlink = urllib.unquote(vidlink)
@@ -1470,8 +1488,8 @@ def loadVideos(url,name):
                     
 		elif(redirlink.find("ok.ru") > 0):
                     oklink = okru_streams(vidlink,redirlink)
-                    print ("============================ POSTING oklink sources ============================")
-                    print oklink
+##                    print ("============================ POSTING oklink sources ============================")
+##                    print oklink
                     
                     labels = []
                     
@@ -1485,10 +1503,9 @@ def loadVideos(url,name):
                             playStream(oklink[index]['url'], "", "")
                     else:
                             return
-
-                else:
-                    if vidlink != "":
-                        addDir2("Googlecontent | Unknown Quality",vidlink,8,"")
+##                else:
+##                    if vidlink != "":
+##                        addDir2("Googlecontent | Unknown Quality",vidlink,8,"")
 
 def playStream(url,title,thumbnail):
         print ("============================ POSTING oklink url ============================")
@@ -1564,6 +1581,7 @@ def http_req(url, getCookie=False, data=None, customHeader=None):
         return source
 
 def ResolveUrl(url,name):
+        xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link,5000)")
         sources = []
         try:
             label=name

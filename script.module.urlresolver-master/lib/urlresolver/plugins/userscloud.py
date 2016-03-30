@@ -16,41 +16,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-from lib import jsunpack
-import urllib
 import re
+from lib import jsunpack
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-
-class UsersCloudResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class UsersCloudResolver(UrlResolver):
     name = "userscloud"
     domains = ["userscloud.com"]
+    pattern = '(?://|\.)(userscloud\.com)/(?:embed-)?([0-9a-zA-Z/]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern = 'https://(userscloud\.com)/(?:embed-)*([a-zA-Z0-9]+)[/|-|$]*'
-        self.user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko'
+        self.net = common.Net()
+        self.user_agent = common.IE_USER_AGENT
         self.net.set_user_agent(self.user_agent)
         self.headers = {'User-Agent': self.user_agent}
-
-    def get_url(self, host, media_id):
-        return 'https://%s/%s' % (host, media_id)
-
-    def get_host_and_id(self, url):
-        r = re.search(self.pattern, url)
-        if r: return r.groups()
-        else: return False
-
-    def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.match(self.pattern, url) or host in self.domains
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
@@ -59,11 +39,26 @@ class UsersCloudResolver(Plugin, UrlResolver, PluginSettings):
         html = self.net.http_GET(web_url, headers=self.headers).content
         r = re.search('>(eval\(function\(p,a,c,k,e,d\).+?)</script>', html, re.DOTALL)
         if r:
-            r = jsunpack.unpack(r.group(1))
-            r = re.search('param\sname\s*=\s*[\'"]src[\'"]\s*value\s*=\s*[\'"](.+?)[\'"]', r)
-            if r:
-                stream_url = r.group(1)
-        if stream_url:
-            return stream_url
+            js_data = jsunpack.unpack(r.group(1))
+
+            stream_url = re.findall('<param\s+name="src"\s*value="([^"]+)', js_data)
+            stream_url += re.findall('file\s*:\s*[\'|\"](.+?)[\'|\"]', js_data)
+            stream_url = [i for i in stream_url if not i.endswith('.srt')]
+
+            if stream_url:
+                return stream_url[0]
+
+        raise ResolverError('File not found')
+
+    def get_url(self, host, media_id):
+        return 'https://%s/%s' % (host, media_id)
+
+    def get_host_and_id(self, url):
+        r = re.search(self.pattern, url)
+        if r:
+            return r.groups()
         else:
-            raise UrlResolver.ResolverError('File not found')
+            return False
+
+    def valid_url(self, url, host):
+        return re.search(self.pattern, url) or self.name in host

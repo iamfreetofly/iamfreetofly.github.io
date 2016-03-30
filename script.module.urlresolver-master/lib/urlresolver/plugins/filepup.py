@@ -16,53 +16,76 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
 import re
-import urllib2
 import urllib
 from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
+import xbmcgui
 
-class NoRedirection(urllib2.HTTPErrorProcessor):
-    def http_response(self, request, response):
-        return response
-
-    https_response = http_response
-
-
-class FilePupResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class FilePupResolver(UrlResolver):
     name = "filepup"
     domains = ["filepup.net"]
+    pattern = '(?://|\.)(filepup.(?:net))/(?:play|files)/([0-9a-zA-Z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern = 'http://((?:www.)?filepup.(?:net))/(?:play|files)/([0-9a-zA-Z]+)'
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        headers = {
-                   'User-Agent': common.IE_USER_AGENT
-        }
+        headers = {'User-Agent': common.SMU_USER_AGENT}
         html = self.net.http_GET(web_url, headers=headers).content
-        match = re.search("document.location='([^']+).*?DOWNLOAD AS A FREE USER", html, re.I)
-        if match:
-            data = urllib.urlencode({'task': 'download'})
-            req = urllib2.Request(match.group(1))
-            req.add_header('User-Agent', common.IE_USER_AGENT)
-            opener = urllib2.build_opener(NoRedirection)
-            urllib2.install_opener(opener)
-            res = urllib2.urlopen(req, data=data)
-            return res.info().getheader('location') + '|Referer=%s' % (web_url)
+        default_url = self.__get_def_source(html)
+        if default_url:
+            qualities = self.__get_qualities(html)
+            def_quality = self.__get_default(html)
+            if len(qualities) <= 1:
+                pick_quality = def_quality
+            elif self.get_setting('auto_pick') == 'true':
+                pick_quality = ''
+                best_height = 0
+                for quality in qualities:
+                    height = int(quality[:-1])
+                    if height > best_height:
+                        pick_quality = quality
+            else:
+                result = xbmcgui.Dialog().select('Choose the link', qualities)
+                if result == -1:
+                    raise ResolverError('No link selected')
+                else:
+                    pick_quality = qualities[result]
+
+            if not def_quality or pick_quality == def_quality:
+                return default_url
+            else:
+                return default_url.replace('.mp4?', '-%s.mp4?' % (pick_quality))
         else:
-            raise UrlResolver.ResolverError('Unable to location download link')
+            raise ResolverError('Unable to location download link')
+
+    def __get_def_source(self, html):
+        default_url = ''
+        match = re.search('sources\s*:\s*\[(.*?)\]', html, re.DOTALL)
+        if match:
+            match = re.search('src\s*:\s*"([^"]+)', match.group(1))
+            if match:
+                default_url = match.group(1) + '|' + urllib.urlencode({'User-Agent': common.SMU_USER_AGENT})
+        return default_url
+
+    def __get_default(self, html):
+        match = re.search('defaultQuality\s*:\s*"([^"]+)', html)
+        if match:
+            return match.group(1)
+        else:
+            return ''
+
+    def __get_qualities(self, html):
+        qualities = []
+        match = re.search('qualities\s*:\s*\[(.*?)\]', html)
+        if match:
+            qualities = re.findall('"([^"]+)"', match.group(1))
+        return qualities
 
     def get_url(self, host, media_id):
-        return 'http://www.filepup.net/files/%s' % (media_id)
+        return 'http://www.filepup.net/play/%s' % (media_id)
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
@@ -72,5 +95,10 @@ class FilePupResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.match(self.pattern, url) or self.name in host
+        return re.search(self.pattern, url) or self.name in host
+
+    @classmethod
+    def get_settings_xml(cls):
+        xml = super(cls, cls).get_settings_xml()
+        xml.append('<setting id="%s_auto_pick" type="bool" label="Automatically pick best quality" default="false" visible="true"/>' % (cls.__name__))
+        return xml

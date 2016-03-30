@@ -16,53 +16,59 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-from urlresolver import common
 import re
+import urllib
 import urllib2
+from lib import jsunpack
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
 class NoRedirection(urllib2.HTTPErrorProcessor):
+
     def http_response(self, request, response):
         return response
 
     https_response = http_response
 
-class Up2StreamResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class Up2StreamResolver(UrlResolver):
     name = "up2stream"
-    domains = ["www.up2stream.com"]
-    pattern = '//((?:www\.)?up2stream.com)/view.php\?ref=([0-9]+)'
+    domains = ["up2stream.com"]
+    pattern = '(?://|\.)(up2stream\.com)/view\.php.+?ref=([0-9a-zA-Z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
+
         headers = {
-                   'User-Agent': common.IE_USER_AGENT
+            'User-Agent': common.IOS_USER_AGENT,
+            'Referer': web_url
         }
-        opener = urllib2.build_opener(NoRedirection)
-        urllib2.install_opener(opener)
+
         html = self.net.http_GET(web_url, headers=headers).content
-        match = re.search('<iframe[^>]*src="([^"]+)', html, re.I)
-        if match:
-            ad_url = 'http://up2stream.com' + match.group(1)
-            _html = self.net.http_GET(ad_url, headers=headers).content
-        
-        match = re.search('<source[^>]*src="([^"]+)', html, re.I)
-        if match:
-            return match.group(1) + '|User-Agent=%s&Referer=%s' % (common.IE_USER_AGENT, web_url)
-        
-        raise UrlResolver.ResolverError("File Not Found or removed")
+
+        for match in re.finditer('(eval\(function.*?)</script>', html, re.DOTALL):
+            html += jsunpack.unpack(match.group(1))
+
+        match = re.findall('<source[^>]*src="([^"]+)', html)
+        match += re.findall('"src","([^"]+)', html)
+
+        try:
+            stream_url = match[-1]
+
+            r = urllib2.Request(stream_url, headers=headers)
+            r = int(urllib2.urlopen(r, timeout=15).headers['Content-Length'])
+
+            if r > 1048576:
+                stream_url += '|' + urllib.urlencode(headers)
+                return stream_url
+        except:
+            ResolverError("File Not Playable")
 
     def get_url(self, host, media_id):
         return 'http://up2stream.com/view.php?ref=%s' % media_id
-    
+
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
         if r:
@@ -71,4 +77,4 @@ class Up2StreamResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        return re.search(self.pattern, url) or 'up2stream' in host
+        return re.search(self.pattern, url) or self.name in host

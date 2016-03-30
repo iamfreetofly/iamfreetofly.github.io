@@ -17,43 +17,38 @@
 """
 
 import re
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
 from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-class VshareEuResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class VshareEuResolver(UrlResolver):
     name = "vshare.eu"
     domains = ['vshare.eu']
+    pattern = '(?://|\.)(vshare\.eu)/(?:embed-|)?([0-9a-zA-Z/]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern = '//((?:www.)?vshare.eu)/(?:embed-|)?([0-9a-zA-Z/]+)'
-
-    def get_url(self, host, media_id):
-        return 'http://vshare.eu/embed-%s-720x400.html' % (media_id)
-
-    def get_host_and_id(self, url):
-        r = re.search(self.pattern, url)
-        if r: return r.groups()
-        else: return False
-
-    def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.search(self.pattern, url) or self.name in host
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
         if '404 Not Found' in html or 'Has Been Removed' in html:
-            raise UrlResolver.ResolverError('The requested video was not found.')
-        
+            raise ResolverError('The requested video was not found.')
+
         match = re.search('file\s*:\s*"([^"]+)', html)
         if match:
             return match.group(1)
-        
-        raise UrlResolver.ResolverError('No playable video found.')
+
+        raise ResolverError('No playable video found.')
+
+    def get_url(self, host, media_id):
+        return 'http://vshare.eu/embed-%s.html' % media_id
+
+    def get_host_and_id(self, url):
+        r = re.search(self.pattern, url)
+        if r:
+            return r.groups()
+        else:
+            return False
+
+    def valid_url(self, url, host):
+        return re.search(self.pattern, url) or self.name in host

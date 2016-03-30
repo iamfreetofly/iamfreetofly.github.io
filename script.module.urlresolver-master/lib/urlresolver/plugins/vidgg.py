@@ -16,24 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-from urlresolver import common
 import re
 import urllib
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-class VidggResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
-    name = "vid.gg"
-    domains = ["www.vid.gg", "vidgg.to"]
-    pattern = 'http://((?:www\.)?vid(?:\.gg|gg\.to))/(?:embed/\?id=|video/)([0-9a-z]+)'
+class VidggResolver(UrlResolver):
+    name = 'vid.gg'
+    domains = ['vidgg.to', 'www.vid.gg']
+    pattern = '(?://|\.)(vid.gg|vidgg.to)/(?:embed/\?id=|video/)([0-9a-z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
@@ -43,10 +37,10 @@ class VidggResolver(Plugin, UrlResolver, PluginSettings):
         if r:
             filekey = r.group(1)
         else:
-            raise UrlResolver.ResolverError("File Not Found or removed")
+            raise ResolverError("File Not Found or removed")
 
         api_call = "http://www.vidgg.to/api/player.api.php?{0}&file={1}&key={2}".format(
-            "numOfErrors=0&cid=1&cid2=undefined&pass=undefined&user=undefined",
+            "numOfErrors=0&cid=1&cid2=undefined&cid3=undefined&pass=undefined&user=undefined",
             media_id,
             urllib.quote_plus(filekey).replace(".", "%2E")
         )
@@ -55,12 +49,12 @@ class VidggResolver(Plugin, UrlResolver, PluginSettings):
         rapi = re.search("url=(.+?)&title=", api_html)
         if rapi:
             return rapi.group(1)
-        
-        raise UrlResolver.ResolverError("File Not Found or removed")
+
+        raise ResolverError("File Not Found or removed")
 
     def get_url(self, host, media_id):
         return 'http://www.vidgg.to/video/%s' % media_id
-    
+
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
         if r:
@@ -69,4 +63,4 @@ class VidggResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        return re.search(self.pattern, url) or 'vid.gg' in host
+        return re.search(self.pattern, url) or self.name in host
