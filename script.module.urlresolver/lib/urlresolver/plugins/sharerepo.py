@@ -16,87 +16,52 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import re, xbmcgui, os
+import re
+import urllib
+import urllib2
 from urlresolver import common
-from lib import jsunpack
+from urlresolver.resolver import UrlResolver, ResolverError
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-net = Net()
-
-class SharerepoResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class SharerepoResolver(UrlResolver):
     name = "sharerepo"
-
+    domains = ["sharerepo.com"]
+    pattern = '(?://|\.)(sharerepo\.com)(?:/f)?/([0-9a-zA-Z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
+        web_url = self.get_url(host, media_id)
+        headers = {
+            'User-Agent': common.IE_USER_AGENT,
+            'Referer': web_url
+        }
+
         try:
-            url = self.get_url(host, media_id)
-            html = self.net.http_GET(url).content
-            dialog = xbmcgui.DialogProgress()
-            dialog.create('Resolving', 'Resolving Sharerepo Link...')       
-            dialog.update(0)
+            html = self.net.http_GET(web_url, headers=headers).content
+        except urllib2.HTTPError as e:
+            if e.code == 404:
+                web_url = 'http://sharerepo.com/%s' % media_id
+                html = self.net.http_GET(web_url, headers=headers).content
+            else:
+                raise
 
-            data = {}
-            r = re.findall(r'type="(?:hidden|submit)?" name="(.+?)"\s* value="?(.+?)">', html)
-            for name, value in r:
-                data[name] = value
-                
-            html = net.http_POST(url, data).content
-    
-            dialog.update(50)
-    
-            sPattern = '''<div id="player_code">.*?<script type='text/javascript'>(eval.+?)</script>'''
-            r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
-            
-            if r:
-                sJavascript = r.group(1)
-                sUnpacked = jsunpack.unpack(sJavascript)
-                sPattern  = '''("video/divx"src="|addVariable\('file',')(.+?)video[.]'''
-                r = re.search(sPattern, sUnpacked)              
-                if r:
-                    link = r.group(2) + fname
-                    dialog.close()
-                    return link
-                raise Exception ('File Not Found or removed')
-            raise Exception ('File Not Found or removed')
+        link = re.search("file\s*:\s*'([^']+)", html)
+        if link:
+            common.log_utils.log_debug('ShareRepo Link Found: %s' % link.group(1))
+            return link.group(1) + '|' + urllib.urlencode({'User-Agent': common.IE_USER_AGENT})
+        else:
+            raise ResolverError('Unable to resolve ShareRepo Link')
 
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return self.unresolvable(code=3, msg=e)
-        except Exception, e:
-            common.addon.log('**** sharerepo Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]SHAREREPO[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg=e)
-            
     def get_url(self, host, media_id):
-        return 'http://sharerepo.com/%s' % media_id 
-        
+        return 'http://sharerepo.com/f/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
             return False
-        return('host', 'media_id')
-
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?sharerepo.com/' +
-                         '[0-9A-Za-z]+', url) or
-                         'sharerepo' in host)
+        return re.search(self.pattern, url) or self.name in host

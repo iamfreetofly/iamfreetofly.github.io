@@ -16,77 +16,54 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
+import re
 import urllib2
 from urlresolver import common
-from lib import jsunpack
-import re
-import os
+from urlresolver.resolver import UrlResolver, ResolverError
 
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-class PrimeshareResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class PrimeshareResolver(UrlResolver):
     name = "primeshare"
-    profile_path = common.profile_path
-    cookie_file = os.path.join(profile_path, 'primeshare.cookies')
+    domains = ["primeshare.tv"]
+    pattern = '(?://|\.)(primeshare\.tv)/download/([0-9a-zA-Z-_]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-       
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        try:          
-            html = self.net.http_GET(web_url).content
-            if re.search('>File not exist<',html):
-                msg = 'File Not Found or removed'
-                common.addon.show_small_popup(title='[B][COLOR white]PRIMESHARE[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' 
-                % msg, delay=5000, image=error_logo)
-                return self.unresolvable(code = 1, msg = msg)          
-            self.net.save_cookies(self.cookie_file)
-            headers = {'Referer':web_url}
-            # wait required
-            common.addon.show_countdown(8)
-            self.net.set_cookies(self.cookie_file)
-            html = self.net.http_POST(web_url, form_data={'hash':media_id}, headers = headers).content
-            r = re.compile("clip:.*?url: '([^']+)'",re.DOTALL).findall(html)
-            if not r:
-                raise Exception ('Unable to resolve Primeshare link. Filelink not found.')
-            return r[0]
-        
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                    (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return self.unresolvable(code=3, msg='Exception: %s' % e) 
-        except Exception, e:
-            common.addon.log('**** Primeshare Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]PRIMESHARE[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg='Exception: %s' % e)
+
+        headers = {'User-Agent': common.IOS_USER_AGENT}
+
+        html = self.net.http_GET(web_url, headers=headers).content
+
+        r = re.search('<video (.+?)</video>', html, re.DOTALL)
+        if not r:
+            raise ResolverError('File Not Found or removed')
+
+        r = re.search('src\s*=\s*"(.+?)"', r.group(1), re.DOTALL)
+        if not r:
+            raise ResolverError('Unable to resolve Primeshare link. Filelink not found.')
+        else:
+            stream_url = r.group(1)
+
+        r = urllib2.Request(stream_url, headers=headers)
+        r = urllib2.urlopen(r, timeout=15)
+        r = int(r.headers['Content-Length'])
+
+        if r < 1024:
+            raise ResolverError('File removed.')
+        else:
+            return stream_url
 
     def get_url(self, host, media_id):
-            return 'http://primeshare.tv/download/%s' % (media_id)
+        return 'http://primeshare.tv/download/%s' % (media_id)
 
     def get_host_and_id(self, url):
-        r = re.search('http://(?:www.)(.+?)/download/([0-9A-Za-z]+)', url)
+        r = re.search(self.pattern, url)
         if r:
-            return r.groups()       
+            return r.groups()
         else:
-            r = re.search('//(.+?)/download/([0-9A-Za-z]+)', url)
-            if r:
-                return r.groups()
-            else:
-                return False
-            
-
+            return False
 
     def valid_url(self, url, host):
-        return re.match('http://(www.)?primeshare.tv/download/[0-9A-Za-z]+', url) or 'primeshare' in host
-
-
+        return re.search(self.pattern, url) or self.name in host

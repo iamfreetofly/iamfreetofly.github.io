@@ -1,8 +1,6 @@
-#-*- coding: utf-8 -*-
-
 """
 Youwatch urlresolver XBMC Addon
-Copyright (C) 2013 JUL1EN094 
+Copyright (C) 2015 tknorris
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,63 +15,60 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-import urllib2, os, re
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
+import re
+import urllib
+from lib import jsunpack
 from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+MAX_TRIES = 5
 
+class YouWatchResolver(UrlResolver):
+    name = "youwatch.org"
+    domains = ["youwatch.org"]
+    pattern = '(?://|\.)(youwatch\.org)/(?:embed-)?([A-Za-z0-9]+)'
 
-class YouwatchResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
-    name = "youwatch"
-    
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
-        base_url = 'http://'+host+'.org/embed-'+media_id+'.html'
-        try:
-            soup = self.net.http_GET(base_url).content
-            r = re.findall('file: "(.+)?",',soup.decode('utf-8'))
-            if r :
-                stream_url = r[0].encode('utf-8')
-            else :
-                raise Exception ('File Not Found or removed')  
-            return stream_url
+        web_url = self.get_url(host, media_id)
 
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return self.unresolvable(code=3, msg=e)
-        except Exception, e:
-            common.addon.log('**** Youwatch Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]YOUWATCH[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg=e)
+        headers = {'Referer': web_url}
+
+        tries = 0
+        while tries < MAX_TRIES:
+            html = self.net.http_GET(web_url, headers=headers).content
+            html = html.replace('\n', '')
+            r = re.search('<iframe\s+src\s*=\s*"([^"]+)', html)
+            if r:
+                headers['Referer'] = web_url
+                web_url = r.group(1)
+            else:
+                break
+            tries += 1
+
+        r = re.search('file\s*:\s*"([^"]+)', html)
+        if r:
+            return r.group(1) + '|' + urllib.urlencode({'User-Agent': common.IE_USER_AGENT})
+
+        for match in re.finditer('(eval\(function.*?)</script>', html, re.DOTALL):
+            js_data = jsunpack.unpack(match.group(1))
+            match2 = re.search('file\s*:\s*"([^"]+)', js_data)
+            if match2:
+                return match2.group(1) + '|' + urllib.urlencode({'User-Agent': common.IE_USER_AGENT})
+
+        raise ResolverError('Unable to resolve youwatch link. Filelink not found.')
 
     def get_url(self, host, media_id):
-        return 'http://youwatch.org/%s' % media_id
+        return 'http://youwatch.org/embed-%s.html' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('http://(www.)?(.+?).org/embed-(.+?)-[0-9A-Za-z]+.html', url)
-        if not r:
-            r = re.search('http://(www.)?(.+?).org/([0-9A-Za-z]+)', url)
-        if r :
-            ls = r.groups()
-            if ls[0] == 'www.' or ls[0] == None :
-                ls = (ls[1],ls[2])
-            return ls
-        else :
+        r = re.search(self.pattern, url)
+        if r:
+            return r.groups()
+        else:
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': 
-            return False
-        return re.match('http://(www.)?youwatch.org/(embed-(.+?).html|[0-9A-Za-z]+)',url) or 'youwatch' in host    
+        return re.search(self.pattern, url) or self.name in host

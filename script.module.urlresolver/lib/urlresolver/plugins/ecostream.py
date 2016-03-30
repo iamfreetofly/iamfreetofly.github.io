@@ -16,77 +16,67 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import urllib2, os
-from urlresolver import common
-
-# Custom imports
 import re
+import urllib2
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-class EcostreamResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class EcostreamResolver(UrlResolver):
     name = "ecostream"
-    profile_path = common.profile_path
-    cookie_file = os.path.join(profile_path, 'ecostream.cookies')
+    domains = ["ecostream.tv"]
+    pattern = '(?://|\.)(ecostream.tv)/(?:stream|embed)?/([0-9a-zA-Z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern = 'http://((?:www.)?ecostream.tv)/(?:stream|embed)?/([0-9a-zA-Z]+).html'
-
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        try:
-            html = self.net.http_GET(web_url).content
-            if re.search('>File not found!<',html):
-                msg = 'File Not Found or removed'
-                common.addon.show_small_popup(title='[B][COLOR white]ECOSTREAM[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]'
-                % msg, delay=5000, image=error_logo)
-                return self.unresolvable(code = 1, msg = msg)
-            self.net.save_cookies(self.cookie_file)
-            # emulate click on button "Start Stream"
-            postHeader = ({'Referer':web_url, 'X-Requested-With':'XMLHttpRequest'})
-            web_url = 'http://www.ecostream.tv/xhr/video/get'
-            self.net.set_cookies(self.cookie_file)
-            html = self.net.http_POST(web_url,{'id':media_id}, headers = postHeader).content
-            sPattern = '"url":"([^"]+)"'
-            r = re.search(sPattern, html)
+        html = self.net.http_GET(web_url).content
+        if re.search('>File not found!<', html):
+            raise ResolverError('File Not Found or removed')
+
+        web_url = 'http://www.ecostream.tv/js/ecoss.js'
+        js = self.net.http_GET(web_url).content
+        r = re.search("\$\.post\('([^']+)'[^;]+'#auth'\).html\(''\)", js)
+        if not r:
+            raise ResolverError('Posturl not found')
+
+        post_url = r.group(1)
+        r = re.search('data\("tpm",([^\)]+)\);', js)
+        if not r:
+            raise ResolverError('Postparameterparts not found')
+        post_param_parts = r.group(1).split('+')
+        found_parts = []
+        for part in post_param_parts:
+            pattern = "%s='([^']+)'" % part.strip()
+            r = re.search(pattern, html)
             if not r:
-                raise Exception ('Unable to resolve Ecostream link. Filelink not found.')
-            sLinkToFile = 'http://www.ecostream.tv'+r.group(1)
-            return urllib2.unquote(sLinkToFile)
+                raise ResolverError('Formvaluepart not found')
+            found_parts.append(r.group(1))
+        tpm = ''.join(found_parts)
+        # emulate click on button "Start Stream"
+        headers = ({'Referer': web_url, 'X-Requested-With': 'XMLHttpRequest', 'User-Agent': common.IE_USER_AGENT})
+        web_url = 'http://www.ecostream.tv' + post_url
+        html = self.net.http_POST(web_url, {'id': media_id, 'tpm': tpm}, headers=headers).content
+        sPattern = '"url":"([^"]+)"'
+        r = re.search(sPattern, html)
+        if not r:
+            raise ResolverError('Unable to resolve Ecostream link. Filelink not found.')
+        stream_url = 'http://www.ecostream.tv' + r.group(1)
+        stream_url = urllib2.unquote(stream_url)
+        stream_url = urllib2.urlopen(urllib2.Request(stream_url, headers=headers)).geturl()
 
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                    (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return self.unresolvable(code=3, msg='Exception: %s' % e)
-        except Exception, e:
-            common.addon.log('**** Ecostream Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]ECOSTREAM[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]'
-            % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg='Exception: %s' % e)
-
+        return stream_url
 
     def get_url(self, host, media_id):
-            return 'http://www.ecostream.tv/stream/%s.html' % (media_id)
+        return 'http://www.ecostream.tv/stream/%s.html' % (media_id)
 
     def get_host_and_id(self, url):
-        r = re.search(self.pattern, url.replace('embed','stream'))
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
             return False
 
-
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.match(self.pattern, url) or self.name in host
+        return re.search(self.pattern, url) or self.name in host

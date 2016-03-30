@@ -24,9 +24,10 @@ import re,urllib2,os,json,time,sys
 from urlresolver import common
 from time import time as wait
 
-class bayfilesResolver(Plugin, UrlResolver, PluginSettings):
+class BayfilesResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "bayfiles"
+    domains = [ "bayfiles.com" ]
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -34,20 +35,18 @@ class bayfilesResolver(Plugin, UrlResolver, PluginSettings):
         self.net = Net()
                                 
     def get_media_url(self, host, media_id):
-        try:
-            web_url = self.get_url(host, media_id)
-            html=self.net.http_GET(web_url).content
-            found = re.search(r'var vfid = (\d+);\s*var delay = (\d+);', html)
-            vfid, delay = found.groups()
-            response = json.loads(self.net.http_POST('http://bayfiles.com/ajax_download',{"_": wait() * 1000,"action": "startTimer","vfid": vfid}).content)
-            common.addon.show_countdown(int(delay),'[B][COLOR orange]BAYFILES[/COLOR][/B]','')
-            html = self.net.http_POST('http://bayfiles.com/ajax_download',{"token": response['token'],"action": "getLink","vfid": vfid}).content
-            final_link = re.search(r"javascript:window.location.href = '([^']+)';", html)
+        web_url = self.get_url(host, media_id)
+        html = self.net.http_GET(web_url).content
+        found = re.search(r'var vfid = (\d+);\s*var delay = (\d+);', html)
+        vfid, delay = found.groups()
+        response = json.loads(self.net.http_POST('http://bayfiles.com/ajax_download', {"_": wait() * 1000, "action": "startTimer", "vfid": vfid}).content)
+        common.addon.show_countdown(int(delay), '[B][COLOR orange]BAYFILES[/COLOR][/B]', '')
+        html = self.net.http_POST('http://bayfiles.com/ajax_download', {"token": response['token'], "action": "getLink", "vfid": vfid}).content
+        final_link = re.search(r"javascript:window.location.href = '([^']+)';", html)
+        if final_link:
             return final_link.group(1)
-        except Exception, e:
-            common.addon.log_error('**** Bayfiles Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]BAYFILES[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg=e)
+        else:
+            raise UrlResolver.ResolverError('Unable to resolve link')
        
     def get_url(self, host, media_id):
         return 'http://%s.com/file/uMXL/%s'%(host,media_id)

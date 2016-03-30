@@ -16,87 +16,79 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import re, xbmcgui, os, urllib2
+import re
+import urllib
+import urllib2
+from lib import captcha_lib
 from urlresolver import common
-from lib import jsunpack
+from urlresolver.resolver import UrlResolver, ResolverError
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-net = Net()
-
-class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class HugefilesResolver(UrlResolver):
     name = "hugefiles"
-
+    domains = ["hugefiles.net"]
+    pattern = '(?://|\.)(hugefiles\.net)/([0-9a-zA-Z/]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
-        try:
-            url = self.get_url(host, media_id)
-            html = self.net.http_GET(url).content
-            r = re.findall('File Not Found',html)
-            if r:
-                raise Exception ('File Not Found or removed')
-            dialog = xbmcgui.DialogProgress()
-            dialog.create('Resolving', 'Resolving Hugefiles Link...')       
-            dialog.update(0)
-    
-            data = {}
-            r = re.findall(r'type="hidden" name="(.+?)"\s* value="?(.+?)">', html)
+        web_url = self.get_url(host, media_id)
+
+        common.log_utils.log_debug('HugeFiles: get_link: %s' % (web_url))
+        html = self.net.http_GET(web_url).content
+
+        r = re.findall('File Not Found', html)
+        if r:
+            raise ResolverError('File Not Found or removed')
+
+        # Grab data values
+        data = {}
+        r = re.findall(r'type="hidden"\s+name="(.+?)"\s+value="(.*?)"', html)
+
+        if r:
             for name, value in r:
                 data[name] = value
-                data.update({'method_free':'Free Download'})
-            html = net.http_POST(url, data).content
-    
-            dialog.update(50)
-    
-            sPattern = '''<div id="player_code">.*?<script type='text/javascript'>(eval.+?)</script>'''
-            r = re.findall(sPattern, html, re.DOTALL|re.I)
-            if r:
-                sUnpacked = jsunpack.unpack(r[0])
-                sUnpacked = sUnpacked.replace("\\'","")
-                r = re.findall('file,(.+?)\)\;s1',sUnpacked)
-                if not r:
-                   r = re.findall('"src"value="(.+?)"/><embed',sUnpacked)
-                dialog.update(100)
-                dialog.close()
-                return r[0]
-            if not r:
-                return self.unresolvable()
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
-            return self.unresolvable(code=3, msg=e)
-        except Exception, e:
-            common.addon.log_error('**** Hugefiles Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]HUGEFILES[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg=e)
-        
+        else:
+            raise ResolverError('Unable to resolve link')
+
+        data['method_free'] = 'Free Download'
+        data.update(captcha_lib.do_captcha(html))
+
+        common.log_utils.log_debug('HugeFiles - Requesting POST URL: %s with data: %s' % (web_url, data))
+        html = self.net.http_POST(web_url, data).content
+
+        # Re-grab data values
+        data = {}
+        r = re.findall(r'type="hidden"\s+name="(.+?)"\s+value="(.*?)"', html)
+
+        if r:
+            for name, value in r:
+                data[name] = value
+        else:
+            raise ResolverError('Unable to resolve link')
+
+        data['referer'] = web_url
+
+        headers = {'User-Agent': common.IE_USER_AGENT}
+
+        common.log_utils.log_debug('HugeFiles - Requesting POST URL: %s with data: %s' % (web_url, data))
+        request = urllib2.Request(web_url, data=urllib.urlencode(data), headers=headers)
+
+        try: stream_url = urllib2.urlopen(request).geturl()
+        except: return
+
+        common.log_utils.log_debug('Hugefiles stream Found: %s' % stream_url)
+        return stream_url
+
     def get_url(self, host, media_id):
-        return 'http://hugefiles.net/%s' % media_id 
-        
+        return 'http://hugefiles.net/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
             return False
-        return('host', 'media_id')
-
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?hugefiles.net/' +
-                         '[0-9A-Za-z]+', url) or
-                         'hugefiles' in host)
+        return re.search(self.pattern, url) or self.name in host

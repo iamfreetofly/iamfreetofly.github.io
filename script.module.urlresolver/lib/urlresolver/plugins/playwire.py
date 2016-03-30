@@ -16,66 +16,56 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import os
-import xbmc
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
 import re
-import urllib2, urllib
-from urlresolver import common
 import xml.etree.ElementTree as ET
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-logo=os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-class PlaywireResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class PlaywireResolver(UrlResolver):
     name = "playwire"
+    domains = ["playwire.com"]
+    pattern = '(?://|\.)(cdn\.playwire\.com.+?\d+)/(?:config|embed)/(\d+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
-        try:
-            web_url = self.get_url(host, media_id)
-            link = self.net.http_GET(web_url).content
-
-            root = ET.fromstring(link)
+        web_url = self.get_url(host, media_id)
+        html = self.net.http_GET(web_url).content
+        if web_url.endswith('xml'):  # xml source
+            root = ET.fromstring(html)
             stream = root.find('src')
             if stream is not None:
-                return stream.text
+                stream = stream.text
+                if stream.endswith('.f4m'):
+                    html = self.net.http_GET(stream).content
+                    try: return re.findall('<baseURL>(.+?)</baseURL>', html)[0] + '/' + re.findall('<media url="(.+?)"', html)[0]
+                    except: pass
             else:
                 accessdenied = root.find('Message')
                 if accessdenied is not None:
-                    err_title = 'Access Denied'
-                    err_message = 'You do not have permission to view this content'
-                    common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))
-                    xbmc.executebuiltin('XBMC.Notification([B][COLOR white]'+__name__+'[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+logo+')')
-                    return self.unresolvable(1, err_message)
+                    raise ResolverError('You do not have permission to view this content')
 
-                return self.unresolvable(0, 'No playable video found.')
-        except urllib2.URLError, e:
-            return self.unresolvable(3, str(e))
-        except Exception, e:
-            return self.unresolvable(0, str(e))
-
+                raise ResolverError('No playable video found.')
+        else:  # json source
+            r = re.search('"src":"(.+?)"', html)
+            if r:
+                return r.group(1)
+            else:
+                raise ResolverError('No playable video found.')
 
     def get_url(self, host, media_id):
-        return 'http://%s/embed/%s.xml' % (host, media_id)
+        if not 'v2' in host:
+            return 'http://%s/embed/%s.xml' % (host, media_id)
+        else:
+            return 'http://%s/config/%s.json' % (host, media_id)
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?/\d+)/embed/(\d+)\.html', url)
-        return r.groups()
+        r = re.search(self.pattern, url)
+        if r:
+            return r.groups()
+        else:
+            return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.match('http://(www\.)?cdn.playwire.com/\d+/embed/\d+\.html', url) or \
-               self.name in host
-
-    #PluginSettings methods
-    def get_settings_xml(self):
-        xml = PluginSettings.get_settings_xml(self)
-        return xml
+        return re.search(self.pattern, url) or self.name in host

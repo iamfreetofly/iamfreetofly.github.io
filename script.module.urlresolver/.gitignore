@@ -8,3 +8,4 @@ doc/build
 doc/resources
 .project
 .pydevproject
+/.settings

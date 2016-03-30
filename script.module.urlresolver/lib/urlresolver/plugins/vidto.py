@@ -16,60 +16,47 @@
 """
 
 import re
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
+from lib import jsunpack
 from urlresolver import common
-net = Net()
+from urlresolver.resolver import UrlResolver, ResolverError
 
-
-class vidto(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class VidtoResolver(UrlResolver):
     name = "vidto"
+    domains = ["vidto.me"]
+    pattern = '(?://|\.)(vidto\.me)/(?:embed-)?([0-9a-zA-Z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
-        try:
-            url = self.get_url(host, media_id)
-            html = self.net.http_GET(url).content
-            common.addon.show_countdown(6, title='Vidto', text='Loading Video...')
+        web_url = self.get_url(host, media_id)
 
-            data = {}
-            r = re.findall(r'type="(?:hidden|submit)?" name="(.+?)"\s* value="?(.+?)">', html)
-            for name, value in r:
-                data[name] = value
-            html = net.http_POST(url, data).content
+        html = self.net.http_GET(web_url).content
 
-            r = re.search('<a id="lnk_download" href="(.+?)"', html)
-            if r:
-                r=re.sub(' ','%20',r.group(1))
-                return r
+        if jsunpack.detect(html):
+            js_data = jsunpack.unpack(html)
+
+            max_label = 0
+            stream_url = ''
+            for match in re.finditer('label:\s*"(\d+)p"\s*,\s*file:\s*"([^"]+)', js_data):
+                label, link = match.groups()
+                if int(label) > max_label:
+                    stream_url = link
+                    max_label = int(label)
+            if stream_url:
+                return stream_url
             else:
-                raise Exception('could not find video')
-        except:
-            common.addon.log('**** Vidto Error occured: %s' % e)
-            common.addon.show_small_popup('Error', str(e), 5000, '')
-            return self.unresolvable(code=0, msg='Exception: %s' % e)
-        
+                raise ResolverError("File Link Not Found")
 
-        
     def get_url(self, host, media_id):
-        return 'http://vidto.me/%s' % media_id
+        return 'http://vidto.me/embed-%s.html' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([0-9A-Za-z]+)',url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
             return False
-        
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?vidto.me/' +
-                        '[0-9A-Za-z]+', url) or 'vidto.me' in host)
+        return re.search(self.pattern, url) or self.name in host

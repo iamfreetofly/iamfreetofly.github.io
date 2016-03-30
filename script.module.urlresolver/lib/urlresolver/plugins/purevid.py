@@ -18,108 +18,92 @@
 """
 
 import os
-import random
 import re
-import urllib, urllib2
-import ast
-import xbmc
-import time
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import SiteAuth
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-from urlresolver import common
-import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
-import cookielib
-from t0mm0.common.net import Net
+import urllib
 import json
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+class PureVidResolver(UrlResolver):
+    name = "purevid"
+    domains = ["purevid.com"]
+    pattern = '(?://|\.)(purevid\.com)/v/([0-9A-Za-z]+)'
 
-class purevid(Plugin, UrlResolver, SiteAuth, PluginSettings):
-    implements   = [UrlResolver, SiteAuth, PluginSettings]
-    name         = "purevid"
-    profile_path = common.profile_path    
-    cookie_file  = os.path.join(profile_path, '%s.cookies' % name)
-    
+    profile_path = common.profile_path
+    pv_cookie_file = os.path.join(profile_path, '%s.cookies' % name)
+
     def __init__(self):
-        p             = self.get_setting('priority') or 1
-        self.priority = int(p)
-        self.net      = Net()
-        try:
-            os.makedirs(os.path.dirname(self.cookie_file))
-        except OSError:
-            pass
+        self.net = common.Net()
+        try: os.makedirs(os.path.dirname(self.pv_cookie_file))
+        except OSError: pass
 
-    #UrlResolver methods
     def get_media_url(self, host, media_id):
-        try :
-            web_url = self.get_url(host, media_id)
-            try:
-                html = self.net.http_GET(web_url).content
-            except urllib2.URLError, e:
-                raise Exception ('got http error %d fetching %s' % (e.code, web_url))
-            data = json.loads(html)                
-            if self.get_setting('quality') == '0' :
-                url = data['clip']['bitrates'][-1]['url']
-            else :
-                url = data['clip']['bitrates'][0]['url']
-            params = ''
-            for val in data['plugins']['lighttpd']['params'] :
-                params += val['name'] + '=' + val['value'] + '&'
-            url =  url + '?' + params[:-1]
-            cookies = {}
-            for cookie in self.net._cj:
-                cookies[cookie.name] = cookie.value
-            url = url + '|' + urllib.urlencode({'Cookie' :urllib.urlencode(cookies)}) 
-            common.addon.log(url)
-            return url
-        except Exception, e:
-            common.addon.log('**** Purevid Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]PUREVID[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg=e)
-                                                                                            
+        web_url = self.get_url(host, media_id)
+        html = self.net.http_GET(web_url).content
+        data = json.loads(html)
+        if self.get_setting('quality') == 'FLV':
+            url = data['clip']['bitrates'][0]['url']
+        else:
+            url = data['clip']['bitrates'][-1]['url']
+        params = ''
+        for val in data['plugins']['lighttpd']['params']:
+            params += val['name'] + '=' + val['value'] + '&'
+        url = url + '?' + params[:-1]
+        cookies = {}
+        for cookie in self.net._cj:
+            cookies[cookie.name] = cookie.value
+        url = url + '|' + urllib.urlencode({'Cookie': urllib.urlencode(cookies)})
+        common.log_utils.log_debug(url)
+        return url
+
     def get_url(self, host, media_id):
         return 'http://www.purevid.com/?m=video_info_embed_flv&id=%s' % media_id
-                        
-    def get_host_and_id(self, url):     
-        r = re.search('//(.+?)/v/([0-9A-Za-z]+)', url)
+
+    def get_host_and_id(self, url):
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
             return False
 
-    def valid_url(self, url, host):                 
-        if self.get_setting('login') == 'false':        
-            return False
-        common.addon.log(url)
-        return 'purevid' in url
+    def valid_url(self, url, host):
+        return re.search(self.pattern, url) or self.name in host
 
-    #SiteAuth methods
-    def login(self):
-        common.addon.log('login to purevid')
-        url = 'http://www.purevid.com/?m=login'
-        data = {'username' : self.get_setting('username'), 'password' : self.get_setting('password')}        
-        source = self.net.http_POST(url,data).content        
-        if re.search(self.get_setting('username'), source):            
-            self.net.save_cookies(self.cookie_file)
-            self.net.set_cookies(self.cookie_file)
+    def needLogin(self):
+        url = 'http://www.purevid.com/?m=main'
+        if not os.path.exists(self.pv_cookie_file):
             return True
-        else:
+        self.net.set_cookies(self.pv_cookie_file)
+        source = self.net.http_GET(url).content
+        common.log_utils.log_debug(source.encode('utf-8'))
+        if re.search("""<span>Welcome <strong>.*</strong></span>""", source) :
+            common.log_utils.log_debug('needLogin returning False')
             return False
-                    
-    #PluginSettings methods
-    def get_settings_xml(self):
-        xml = PluginSettings.get_settings_xml(self)
-        xml += '<setting id="purevid_login" '        
-        xml += 'type="bool" label="Login" default="false"/>\n'
-        xml += '<setting id="purevid_username" enable="eq(-1,true)" '
-        xml += 'type="text" label="     username" default=""/>\n'
-        xml += '<setting id="purevid_password" enable="eq(-2,true)" '
-        xml += 'type="text" label="     password" option="hidden" default=""/>\n'
-        xml += '<setting label="Video quality" id="%s_quality" ' % self.__class__.__name__
-        xml += 'type="enum" values="FLV|Maximum" default="0" />\n'
-        xml += '<setting label="This plugin calls the Purevid urlresolver - '
-        xml += 'change settings there." type="lsep" />\n'
+        else:
+            common.log_utils.log_debug('needLogin returning True')
+            return True
+
+    def login(self):
+        if self.needLogin():
+            common.log_utils.log('login to purevid')
+            url = 'http://www.purevid.com/?m=login'
+            data = {'username': self.get_setting('username'), 'password': self.get_setting('password')}
+            source = self.net.http_POST(url, data).content
+            if re.search(self.get_setting('username'), source):
+                self.net.save_cookies(self.pv_cookie_file)
+                self.net.set_cookies(self.pv_cookie_file)
+                return True
+            else:
+                return False
+        else:
+            return True
+
+    @classmethod
+    def get_settings_xml(cls):
+        xml = super(cls, cls).get_settings_xml()
+        xml.append('<setting id="%s_login" type="bool" label="login" default="false"/>' % (cls.__name__))
+        xml.append('<setting id="%s_username" enable="eq(-1,true)" type="text" label="Username" default=""/>' % (cls.__name__))
+        xml.append('<setting id="%s_password" enable="eq(-2,true)" type="text" label="Password" option="hidden" default=""/>' % (cls.__name__))
+        xml.append('<setting label="Video quality" id="%s_quality" type="labelenum" values="FLV|Maximum" default="Maximum" />' % (cls.__name__))
+        xml.append('<setting label="This plugin calls the Purevid urlresolver - change settings there." type="lsep" />')
         return xml

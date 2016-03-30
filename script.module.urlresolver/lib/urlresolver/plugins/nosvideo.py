@@ -16,77 +16,62 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import re, os
+import re
+import base64
+import urllib
 from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-net = Net()
-
-class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class NosvideoResolver(UrlResolver):
     name = "nosvideo"
+    domains = ["nosvideo.com", "noslocker.com"]
+    pattern = '(?://|\.)(nosvideo.com|noslocker.com)/(?:\?v\=|embed/|.+?\u=)?([0-9a-zA-Z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
-        try:
-            url = self.get_url(host, media_id)
-            html = self.net.http_GET(url).content
-            url = re.findall('<a target="_blank" href="(.+?)" class="dotted">',html)
-            html = self.net.http_GET(url[0]).content
-    
-            data = {}
-            r = re.findall(r'type="hidden" name="(.+?)"\s* value="?(.+?)"', html)
-            for name, value in r:
-                data[name] = value
-                data.update({'method_free':'Free Download'})
-            
-            html = net.http_POST(url[0], data).content
+        web_url = self.get_url(host, media_id)
 
-            data = {}
-            r = re.findall(r'type="hidden" name="((?!(?:method_premium)).+?)"\s* value="?(.+?)"', html)
-            for name, value in r:
-                data[name] = value
-                data.update({'method_free':'Free Download'})
+        html = self.net.http_GET(web_url).content
 
-            common.addon.show_countdown(30, title='Nosvideo', text='Loading Video...')
-            html = net.http_POST(url[0], data).content
-            
-            r = re.search('<a class="select" href="(.+?)">Download</a>', html)
-            if r:
-                return r.group(1)
-            else:
-                raise Exception('could not find video')          
-                                
-        except Exception, e:
-            common.addon.log('**** Nosvideo Error occured: %s' % e)
-            common.addon.show_small_popup('Error', str(e), 5000, '')
-            return self.unresolvable(code=0, msg='Exception: %s' % e)
-        
+        if 'File Not Found' in html:
+            raise ResolverError('File Not Found')
+
+        r = re.search('class\s*=\s*[\'|\"]btn.+?[\'|\"]\s+href\s*=\s*[\'|\"](.+?)[\'|\"]', html)
+        if not r:
+            raise ResolverError('File Not Found')
+
+        headers = {'Referer': r.group(1)}
+
+        web_url = 'http://nosvideo.com/vj/video.php?u=%s&w=&h=530' % media_id
+
+        html = self.net.http_GET(web_url, headers=headers).content
+
+        stream_url = re.compile('var\stracker\s*=\s*[\'|\"](.+?)[\'|\"]').findall(html)
+        stream_url += re.compile("tracker *: *[\'|\"](.+?)[\'|\"]").findall(html)
+
+        if len(stream_url) > 0:
+            stream_url = stream_url[0]
+        else:
+            raise ResolverError('Unable to locate video file')
+
+        try: stream_url = base64.b64decode(stream_url)
+        except: pass
+
+        stream_url += '|' + urllib.urlencode({'User-Agent': common.IE_USER_AGENT})
+
+        return stream_url
+
     def get_url(self, host, media_id):
-        return 'http://nosvideo.com/%s' % media_id 
-        
+        return 'http://nosvideo.com/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/(\?v\=[0-9a-zA-Z]+)',url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
             return False
-        return('host', 'media_id')
-
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?nosvideo.com/' +
-                         '\?v\=[0-9A-Za-z]+', url) or
-                         'nosvideo' in host)
+        return re.search(self.pattern, url) or self.name in host

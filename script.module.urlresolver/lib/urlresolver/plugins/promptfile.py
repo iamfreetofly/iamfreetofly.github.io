@@ -15,65 +15,43 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
-
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import re, urllib2, os, xbmcgui
+import re
+import urllib2
 from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-class PromptfileResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class PromptfileResolver(UrlResolver):
     name = "promptfile"
+    domains = ["promptfile.com"]
+    pattern = '(?://|\.)(promptfile\.com)/(?:l|e)/([0-9A-Za-z\-]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-
-        try:
-            html = self.net.http_GET(web_url).content
-            data = {}
-            r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
-            for name, value in r:
-                data[name] = value
-            html = self.net.http_POST(web_url, data).content
-            html = re.compile(r'clip\s*:\s*\{.*?url\s*:\s*[\"\'](.+?)[\"\']', re.DOTALL).search(html)
-            if not html:
-                raise Exception ('File Not Found or removed')
-            stream_url = html.group(1)
-            return stream_url
-
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
-            return self.unresolvable(code=3, msg=e)
-
-        except Exception, e:
-            common.addon.log_error('**** Promptfile Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]PROMPTFILE[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg=e)
+        html = self.net.http_GET(web_url).content
+        data = {}
+        r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
+        for name, value in r:
+            data[name] = value
+        html = self.net.http_POST(web_url, data).content
+        html = re.compile(r'clip\s*:\s*\{.*?url\s*:\s*[\"\'](.+?)[\"\']', re.DOTALL).search(html)
+        if not html:
+            raise ResolverError('File Not Found or removed')
+        stream_url = html.group(1)
+        stream_url = urllib2.urlopen(urllib2.Request(stream_url)).geturl()
+        return stream_url
 
     def get_url(self, host, media_id):
-        return 'http://www.promptfile.com/%s' % (media_id)
+        return 'http://www.promptfile.com/e/%s' % (media_id)
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/(.+)', url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?promptfile.com/l/' +
-                         '[0-9A-Za-z\-]+', url) or
-                         'promptfile' in host)
+        return re.search(self.pattern, url) or self.name in host

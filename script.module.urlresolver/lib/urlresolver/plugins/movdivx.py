@@ -16,94 +16,48 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import urllib2
-from urlresolver import common
-from lib import jsunpack
-
-# Custom imports
 import re
+from lib import jsunpack
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-
-class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class MovDivxResolver(UrlResolver):
     name = "movdivx"
+    domains = ["movdivx.com"]
+    pattern = '(?://|\.)(movdivx\.com)/([0-9a-zA-Z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        #e.g. http://movdivx.com/trrrw4r6bjqu/American_Dad__s_1_e_3_p1-1.flv.html
-        self.pattern = 'http://(movdivx.com)/(.+?).html'
-
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
+        html = self.net.http_GET(web_url).content
 
-        try:
-            html = self.net.http_GET(web_url).content
+        data = {}
+        for match in re.finditer('type="hidden"\s*name="([^"]+)"\s*value="([^"]+)', html):
+            key, value = match.groups()
+            data[key] = value
+        data['method_free'] = 'Continue to Stream >>'
 
-            r =  'name="op" value="(.+?)">.+?'
-            r += 'name="usr_login" value="(.+?)?">.+?'
-            r += 'name="id" value="(.+?)".+?'
-            r += 'name="fname" value="(.+?)".+?'
-    
-            r = re.search(r,html,re.DOTALL)
-            op,usr_login,id,fname = r.groups()
-            data =  {'op':op}
-            data['usr_login'] = usr_login
-            data['id'] = id
-            data['fname'] = fname
-            data['referer'] = web_url
-            data['method_free'] = 'Continue to Stream'
+        html = self.net.http_POST(web_url, data).content
 
-            html = self.net.http_POST(web_url, data).content
-
-            # get url from packed javascript
-            sPattern =  '<div id="player_code"><script type=(?:"|\')text/javascript(?:"|\')>'
-            sPattern += '(eval\(function\(p,a,c,k,e,d\)\{while.+?DivXBrowserPlugin.+?)</script>'
-            
-            r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
-            
-            if r:
-                sJavascript = r.group(1) + ")))"
-                sUnpacked = jsunpack.unpack(sJavascript)
-                sPattern = 'type="video/divx"src="(.+?)"custommode='
-                r = re.search(sPattern, sUnpacked)
-                if r:
-                    return r.group(1)
+        # get url from packed javascript
+        sPattern = '(eval\(function\(p,a,c,k,e,d\).*?)</script>'
+        for match in re.finditer(sPattern, html, re.DOTALL | re.IGNORECASE):
+            fragment = match.group(1)
+            js_data = jsunpack.unpack(fragment)
+            match = re.search('name="src"\s*value="([^"]+)', js_data)
+            if match:
+                return match.group(1)
             else:
-                sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>'
-                sPattern += '(eval\(function\(p,a,c,k,e,d\)\{while.*SWFObject.*)'
-                
-                r2 = re.search(sPattern, html, re.IGNORECASE)
-                
-                if r2:
-                    sJavascript = r2.group(1) + ")))"
-                    sUnpacked = jsunpack.unpack(sJavascript)
-                    sPattern = "'file','([^']*)'";
-                    r = re.search(sPattern, sUnpacked)
-                    if r:
-                        return r.group(1)
-            raise Exception ('failed to parse link')
+                match = re.search('file\s*:\s*"([^"]+)', js_data)
+                if match:
+                    return match.group(1)
 
-        except urllib2.URLError, e:
-            common.addon.log_error('Movdivx: got http error %d fetching %s' %
-                                  (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
-            return self.unresolvable(code=3, msg=e)
-        
-        except Exception, e:
-            common.addon.log_error('**** Movdivx Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]MOVDIVX[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg=e)
-
+        raise ResolverError('failed to parse link')
 
     def get_url(self, host, media_id):
-            return 'http://movdivx.com/%s.html' % (media_id)
+        return 'http://movdivx.com/%s.html' % (media_id)
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
@@ -112,7 +66,5 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
         else:
             return False
 
-
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.match(self.pattern, url) or self.name in host
+        return re.search(self.pattern, url) or self.name in host

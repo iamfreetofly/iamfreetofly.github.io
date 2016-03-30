@@ -1,6 +1,6 @@
 '''
 sharesix urlresolver plugin
-Copyright (C) 2011 humla
+Copyright (C) 2014 tknorris
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,76 +16,48 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import re, urllib2, os, xbmcgui
+import re
+import urllib
 from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-class SharesixResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class SharesixResolver(UrlResolver):
     name = "sharesix"
+    domains = ["sharesix.com"]
+    pattern = '(?://|\.)(sharesix\.com)(?:/f)?/([0-9A-Za-z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
+        headers = {'User-Agent': common.IE_USER_AGENT}
 
-        try:
-           # Otherwise just use the original url to get the content. For sharesix
-            html = self.net.http_GET(web_url).content
-            
-            data = {}
-            r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
-            for name, value in r:
-                data[name] = value
-            data["method_free"] = "Free"
-            html = self.net.http_POST(web_url, data).content
-            
-            # To build the streamable link, we need 
-            # # the IPv4 addr (first 4 content below)
-            # # the hash of the file
-            metadata = re.compile('\|\|?(\d+)\|\|?(\d+)\|\|?(\d+)\|\|?(\d+)\|.+?video\|(.+?)\|\|?file').findall(html)
+        html = self.net.http_GET(web_url, headers=headers).content
+        r = re.search('<a[^>]*id="go-next"[^>*]href="([^"]+)', html)
+        if r:
+            next_url = 'http://' + host + r.group(1)
+            html = self.net.http_GET(next_url, headers=headers).content
 
-            if (len(metadata) > 0):
-                metadata = metadata[0]
-                stream_url="http://"+metadata[3]+"."+metadata[2]+"."+metadata[1]+"."+metadata[0]+"/d/"+ metadata[4]+"/video.flv"
-                return stream_url
-            
-            if 'file you were looking for could not be found' in html:
-                raise Exception ('File Not Found or removed')
+        if 'file you were looking for could not be found' in html:
+            raise ResolverError('File Not Found or removed')
 
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
-            return self.unresolvable(code=3, msg=e)
-        except Exception, e:
-            common.addon.log_error('**** Sharesix Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]SHARESIX[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg=e)
+        r = re.search("var\s+lnk\d+\s*=\s*'(.*?)'", html)
+        if r:
+            stream_url = r.group(1) + '|' + urllib.urlencode(headers)
+            return stream_url
+        else:
+            raise ResolverError('Unable to locate link')
 
     def get_url(self, host, media_id):
-        return 'http://%s/%s' % (host, media_id)
-        
+        return 'http://sharesix.com/f/%s' % media_id
+
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([0-9a-zA-Z/]+)', url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
             return False
 
-
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?sharesix.com/' +
-                         '[0-9A-Za-z]+', url) or
-                         'sharesix' in host)
+        return re.search(self.pattern, url) or self.name in host

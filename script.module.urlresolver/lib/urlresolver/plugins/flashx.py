@@ -1,6 +1,6 @@
 """
-    urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0
+    Kodi urlresolver plugin
+    Copyright (C) 2014  smokdpi
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,99 +16,46 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import urllib2
-from urlresolver import common
-import os
-
-# Custom imports
 import re
+from lib import jsunpack
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-
-class FlashxResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class FlashxResolver(UrlResolver):
     name = "flashx"
+    domains = ["flashx.tv"]
+    pattern = '(?://|\.)(flashx\.tv)/(?:embed-|dl\?)?([0-9a-zA-Z/-]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        #e.g. http://flashx.tv/player/embed_player.php?vid=1503&width=600&height=370&autoplay=no
-        self.pattern = 'http://((?:www.|play.)?flashx.tv)/(?:player/embed_player.php\?vid=|player/embed.php\?vid=|video/)([0-9a-zA-Z/-]+)'
-
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        try:
-            html = self.net.http_GET(web_url).content
-            if re.search('>Video not found',html):
-                msg = 'File Not Found or removed'
-                common.addon.show_small_popup(title='[B][COLOR white]FLASHX[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' 
-                % msg, delay=5000, image=error_logo)
-                return self.unresolvable(code = 1, msg = msg)
-            if re.search('conversion queue <',html):
-                msg = 'File is still being converted'
-                common.addon.show_small_popup(title='[B][COLOR white]FLASHX[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' 
-                % msg, delay=5000, image=error_logo)
-                return self.unresolvable(code = 2, msg = msg)
-             
-            #get embedded player
-            pattern = '(http://play\.flashx\.tv/player/embed\.php\?vid=[^&]+)'
-            r = re.search(pattern, html)
-            if not r:
-                raise Exception ('Unable to resolve Flashx link. Embedded link not found.')
+        html = self.net.http_GET(web_url).content
+
+        r = re.search('href="([^"]+)', html)
+        if r:
             web_url = r.group(1)
             html = self.net.http_GET(web_url).content
-            #get form action
-            pattern = 'action="([^"]+)"'
-            r = re.search(pattern, html)
-            if not r:
-                raise Exception ('Unable to resolve Flashx link. Post action not found.')
-            form_action = r.group(1)
-            form_values = {}
-            #get post var
-            for i in re.finditer('<input.*?name="(.*?)".*?value="(.*?)">', html):
-                form_values[i.group(1)] = i.group(2)
-            if not r:
-                raise Exception ('Unable to resolve Flashx link. Post var not found.')           
-            web_url = web_url[0:web_url.rfind('/')+1] + form_action
-            html = self.net.http_POST(web_url, form_data=form_values).content
-            #get config url
-            pattern = 'data="([^"]+)"'
-            r = re.search(pattern, html)
-            if not r:
-                raise Exception ('Unable to resolve Flashx link. Config url not found.')
-            web_url = r.group(1)                   
-            html = self.net.http_GET(web_url).content
-            #get player url
-            web_url = web_url.split('config=')[-1]
-            html = self.net.http_GET(web_url).content
-            #get file link
-            pattern = '<file>([^<]+)</file>'
-            r = re.search(pattern, html)
-            if not r:
-                raise Exception ('Unable to resolve Flashx link. Filelink not found.')
-            return r.group(1)
-            
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                    (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return self.unresolvable(code=3, msg='Exception: %s' % e) 
-        except Exception, e:
-            common.addon.log('**** Flashx Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]FLASHX[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' 
-            % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg='Exception: %s' % e) 
+
+            try: html = jsunpack.unpack(re.search('(eval\(function.*?)</script>', html, re.DOTALL).group(1))
+            except: pass
+
+            best = 0
+            best_link = ''
+
+            for stream in re.findall('file\s*:\s*"(http.*?)"\s*,\s*label\s*:\s*"(\d+)', html, re.DOTALL):
+                if int(stream[1]) > best:
+                    best = int(stream[1])
+                    best_link = stream[0]
+
+        if best_link:
+            return best_link
+        else:
+            raise ResolverError('Unable to resolve Flashx link. Filelink not found.')
 
     def get_url(self, host, media_id):
-            return 'http://flashx.tv/video/%s' % (media_id)
+        return 'http://www.flashx.tv/embed-%s.html' % media_id
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
@@ -118,5 +65,10 @@ class FlashxResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.match(self.pattern, url) or self.name in host
+        return re.search(self.pattern, url) or self.name in host
+
+    @classmethod
+    def get_settings_xml(cls):
+        xml = super(cls, cls).get_settings_xml()
+        xml.append('<setting id="%s_auto_pick" type="bool" label="Automatically pick best quality" default="false" visible="true"/>' % (cls.__name__))
+        return xml
