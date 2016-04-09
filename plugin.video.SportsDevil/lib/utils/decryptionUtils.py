@@ -16,17 +16,13 @@ def gAesDec(data, key):
     import mycrypt
     return mycrypt.decrypt(key,data)
 
-def aesDec(data, key):
-    from base64 import b64decode
-    try:
-        from Crypto.Cipher import AES
-    except ImportError:
-        import pyaes as AES
-    iv = 16 * '\x00'
-    cipher = AES.new(b64decode(key), AES.MODE_CBC, IV=iv)
-    padded_plaintext = cipher.decrypt(b64decode(data))
-    padding_len = ord(padded_plaintext[-1])
-    return padded_plaintext[:-padding_len]
+def cjsAesDec(data, key):
+    try: import simplejson as json
+    except ImportError: import json
+    import mycrypt
+    enc_data = json.loads(data.decode('base-64'))
+    ciphertext = 'Salted__' + enc_data['s'].decode('hex') + enc_data['ct'].decode('base-64')
+    return json.loads(mycrypt.decrypt(key,ciphertext.encode('base-64')))
 
 def wdecode(data):
     from itertools import chain
@@ -79,7 +75,7 @@ def doDemystify(data):
     #init jsFunctions and jsUnpacker
     jsF = JsFunctions()
     jsU = JsUnpacker()
-    jsUV2 =JsUnpackerV2()
+    jsU2 = JsUnpackerV2()
     jsUW = JsUnwiser()
     jsUI = JsUnIonCube()
     jsUF = JsUnFunc()
@@ -88,7 +84,7 @@ def doDemystify(data):
     JsPush = JsUnPush()
 
     # replace NUL
-    data = data.replace('\0','')
+    #data = data.replace('\0','')
 
 
     # unescape
@@ -110,6 +106,16 @@ def doDemystify(data):
         for g in r.findall(data):
             quoted=g
             data = data.replace(quoted, quoted.decode('unicode-escape'))
+
+    r = re.compile('(\'\+dec\("\w+"\)\+\')')
+    while r.findall(data):
+        for g in r.findall(data):
+            r2 = re.compile('dec\("(\w+)"\)')
+            for dec_data in r2.findall(g):
+                res = ''
+                for i in dec_data:
+                    res = res + chr(ord(i) ^ 123)
+            data = data.replace(g, res)
             
     r = re.compile('(eval\(decodeURIComponent\(atob\([\'"][^\'"]+[\'"]\)\)\);)')
     while r.findall(data):
@@ -117,6 +123,13 @@ def doDemystify(data):
             r2 = re.compile('eval\(decodeURIComponent\(atob\([\'"]([^\'"]+)[\'"]\)\)\);')
             for base64_data in r2.findall(g):
                 data = data.replace(g, urllib.unquote(base64_data.decode('base-64')))
+                
+    r = re.compile('(<script.*?str=\'@.*?str.replace)')
+    while r.findall(data):
+        for g in r.findall(data):
+            r2 = re.compile('.*?str=\'([^\']+)')
+            for escape_data in r2.findall(g):
+                data = data.replace(g, urllib.unquote(escape_data.replace('@','%')))
        
     r = re.compile('(base\([\'"]*[^\'"\)]+[\'"]*\))')
     while r.findall(data):
@@ -126,13 +139,13 @@ def doDemystify(data):
                 data = data.replace(g, urllib.unquote(base64_data.decode('base-64')))
                 escape_again=True
     
-    r = re.compile('(eval\\(function\\(\w+,\w+,\w+,\w+.*?join\\(\'\'\\);*}\\(.*?\\))', flags=re.DOTALL)
-    for g in r.findall(data):
-        try:
-            data = data.replace(g, wdecode(g))
-            escape_again=True
-        except:
-            pass
+    #r = re.compile('(eval\\(function\\(\w+,\w+,\w+,\w+.*?join\\(\'\'\\);*}\\(.*?\\))', flags=re.DOTALL)
+    #for g in r.findall(data):
+        #try:
+            #data = data.replace(g, wdecode(g))
+            #escape_again=True
+        #except:
+            #pass
 
     # n98c4d2c
     if 'function n98c4d2c(' in data:
@@ -196,17 +209,16 @@ def doDemystify(data):
                 data = data.replace(g, destreamer(g))
 
     # JS P,A,C,K,E,D
-    if jsU.containsPacked(data):
-        data = jsU.unpackAll(data)
-        escape_again=True
-
-    #if still exists then apply v2
-    if jsUV2.containsPacked(data):
-        data = jsUV2.unpackAll(data)
-        escape_again=True
-        
     if jsU95.containsPacked(data):
         data = jsU95.unpackAll(data)
+        escape_again=True
+        
+    if jsU2.containsPacked(data):
+        data = jsU2.unpackAll(data)
+        escape_again=True
+    
+    if jsU.containsPacked(data):
+        data = jsU.unpackAll(data)
         escape_again=True
 
     # JS W,I,S,E

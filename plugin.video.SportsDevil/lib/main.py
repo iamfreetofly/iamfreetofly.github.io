@@ -53,9 +53,7 @@ class Mode:
     REMOVEFROMCUSTOMMODULES = 11
     INSTALLADDON = 12
     CHROME = 13
-    
-
-
+    WEBDRIVER = 14
 
 
 class Main:
@@ -82,7 +80,7 @@ class Main:
         common.log('SportsDevil initialized')
         
 
-
+    # removed in 17 http://forum.kodi.tv/showthread.php?tid=250936&pid=2198464#pid2198464
     def getPlayerType(self):
         sPlayerType = common.getSetting('playerType')
         
@@ -113,13 +111,25 @@ class Main:
             xbmcplugin.setResolvedUrl(self.handle, True, listitem)
         else:
             url = urllib.unquote_plus(videoItem['url'])
-            xbmc.Player(self.getPlayerType()).play(url, listitem)
+            xbmc.Player().play(url, listitem)
     
-    def launchChrome (self, url, title):
+    def launchChrome(self, url, title):
         action = 'RunPlugin(%s)' % ('plugin://plugin.program.chrome.launcher/?kiosk=yes&mode=showSite&stopPlayback=yes&url=' + url)
         common.log('chrome test:' + str(action))
         xbmc.executebuiltin(action)
         
+    def playWebDriver(self, url, title):
+        try:
+            import liveremote
+            video = liveremote.resolve(url)
+            liz = xbmcgui.ListItem(title)
+            liz.setPath(video)
+            liz.setProperty('IsPlayable','true')
+            xbmc.Player().play(video, liz)
+        except:
+            import sys,traceback
+            traceback.print_exc(file = sys.stdout)
+            common.showInfo('This is not the option you are looking for.')
 
 
     def downloadVideo(self, url, title):
@@ -351,13 +361,18 @@ class Main:
                 icon = common.Paths.defaultVideoIcon
             else:
                 icon = common.Paths.defaultCategoryIcon
-                
-        liz = xbmcgui.ListItem(title, title, iconImage=icon, thumbnailImage=icon)
 
         fanart = item['fanart']
         if not fanart:
             fanart = common.Paths.pluginFanart
-        liz.setProperty('fanart_image', fanart)
+
+        liz = xbmcgui.ListItem(title)
+        try:
+            liz.setArt({'thumb': icon, 'fanart': fanart})
+        except:
+            liz.setProperty('fanart_image', fanart)
+            liz.setThumbnailImage(icon)
+            common.log('main.py:374: setThumbnailImage is deprecated')
 
         """
         General Values that apply to all types:
@@ -412,7 +427,14 @@ class Main:
 
         if m_type == 'video':
             liz.setProperty('IsPlayable','true')
-            #liz.setMimeType('text')
+
+        if title.startswith('p2pcast'):
+            try:
+                liz.setMimeType('application/vnd.apple.mpegurl')
+                #liz.setContentLookup(False)
+            except:
+                common.showError('Update Kodi to 16+ to view this stream')
+                return None
 
         return liz
 
@@ -466,6 +488,8 @@ class Main:
                         contextMenuItems.append(contextMenuItem)
                 contextMenuItem = createContextMenuItem('Open with Chrome launcher', Mode.CHROME, codedItem)
                 contextMenuItems.append(contextMenuItem)
+                #contextMenuItem = createContextMenuItem('Open with WebDriver', Mode.WEBDRIVER, codedItem)
+                #contextMenuItems.append(contextMenuItem)
 
         liz = self.createXBMCListItem(lItem)
 
@@ -600,7 +624,7 @@ class Main:
         mode = int(self.addon.queries['mode'])
         queryString = self.addon.queries['item']
         item = ListItem.create()
-        if mode in [Mode.CHROME, Mode.ADDTOFAVOURITES, Mode.REMOVEFROMFAVOURITES, Mode.EDITITEM]:
+        if mode in [Mode.CHROME, Mode.ADDTOFAVOURITES, Mode.REMOVEFROMFAVOURITES, Mode.EDITITEM, Mode.WEBDRIVER]:
             item.infos = self.addon.parse_query(urllib.unquote(queryString),{})
         else:
             item.infos = self.addon.parse_query(queryString,{})
@@ -688,6 +712,11 @@ class Main:
 
                 elif mode == Mode.PLAY:
                     self.playVideo(item)
+                
+                elif mode == Mode.WEBDRIVER:
+                    url = urllib.quote(item['url'])
+                    title = item['title']
+                    self.playWebDriver(url, title)
 
                 elif mode == Mode.QUEUE:
                     self.queueAllVideos(item)

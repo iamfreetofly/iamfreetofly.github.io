@@ -29,7 +29,7 @@ def replaceFromDict(dictFilePath, wrd):
     dictionary = getFileContent(dictFilePath)
     dictionary = dictionary.replace('\r\n','\n')
 
-    p_reg = re.compile('^[^\r\n]+$', re.IGNORECASE + re.DOTALL + re.MULTILINE)
+    p_reg = re.compile('^[^\r\n]+$', re.IGNORECASE + re.DOTALL + re.MULTILINE + re.UNICODE)
     m_reg = p_reg.findall(dictionary)
 
     word = wrd
@@ -190,7 +190,16 @@ def resolve(src):
     try:
         parsed_link = urlparse.urlsplit(src)
         tmp_host = parsed_link.netloc.split(':')
-        tmp_host[0] = socket.gethostbyname(tmp_host[0])
+        if tmp_host[0] == 'watch4.streamlive.to':
+            servers = ['80.82.78.4',
+                       '95.211.210.69',
+                       '95.211.196.5',
+                       '184.173.85.91',
+                       '169.54.85.69']
+            import random
+            tmp_host[0] = random.choice(servers)
+        else:
+            tmp_host[0] = socket.gethostbyname(tmp_host[0])
         tmp_host = ':'.join(tmp_host)
         parsed_link = parsed_link._replace(netloc=tmp_host)
         return parsed_link.geturl()
@@ -212,7 +221,7 @@ def replaceRegex(params, src):
     paramSrch = paramArr[1]
     paramRepl = paramArr[2]
 
-    r = re.compile(paramSrch, re.DOTALL + re.IGNORECASE)
+    r = re.compile(paramSrch, re.IGNORECASE + re.DOTALL + re.MULTILINE + re.UNICODE)
     ms = r.findall(paramStr)
     if ms:
         for m in ms:
