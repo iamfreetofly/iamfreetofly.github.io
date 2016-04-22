@@ -144,7 +144,7 @@ def Parts(url,name):
         except: pass
         #partlist=re.compile('<ul class="listew">(.+?)</ul>').findall(link)
         partlist=re.compile('<ul class="listep">(.+?)</ul>').findall(link)
-        partlist=re.compile('<li>(.+?)<\/li>').findall(partlist[0])
+        partlist=re.compile('<li>(.+?)</li>').findall(partlist[0])
         totalpart=0
         for partconent in partlist:
                totalpart=totalpart+1
