@@ -53,9 +53,13 @@ def INDEX(url):
             link =link.encode("UTF-8")
         except: pass
         newlink = ''.join(link.splitlines()).replace('\t','')
-        listcontent=re.compile('<div class="content">(.+?)<div id="r">').findall(newlink)
-        match=re.compile('<img [^>]*src=["\']?([^>^"^\']+)["\']?[^>]*></a><h1 class="normal"><a href="(.+?)" title="(.+?)">(.+?)</a><span class="download">').findall(listcontent[0])
-        for (vimg,vurl,vname,vtmp) in match:
+        #listcontent=re.compile('<div class="content">(.+?)<div id="r">').findall(newlink)
+        #match=re.compile('<img [^>]*src=["\']?([^>^"^\']+)["\']?[^>]*></a><h1 class="normal"><a href="(.+?)" title="(.+?)">(.+?)</a><span class="download">').findall(listcontent[0])
+        listcontent=re.compile('<div id="container" style=[^>]*>(.+?)</div><footer id="footer" style=[^>]*').findall(newlink)
+        match=re.compile('<div class="movie-element [^>]*><a href="(.+?)" title="(.+?)" class="movie-image" style="background-image: url((.+?))>').findall(listcontent[0])
+
+        #for (vimg,vurl,vname,vtmp) in match:
+        for (vurl,vname,vimg) in match:
             try:
                   addDir(vname,vurl+"list-episode/",5,vimg)
             except:
