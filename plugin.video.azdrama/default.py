@@ -369,6 +369,7 @@ def Videosresolve(url,name):
                content = GetContent(newlink)
                vidlink = []
 
+<<<<<<< HEAD
                # unobscurify
                key = 5
                unobscurify = lambda s: urllib.unquote(''.join(chr(ord(c) - key) for c in urllib.unquote(s)))
@@ -378,6 +379,8 @@ def Videosresolve(url,name):
                    script_end = script_end + 9 if script_end > -1 else -1
                    content = content[:script_end] + unobscurify(df.group(1)) + content[script_end:]
 
+=======
+>>>>>>> origin/master
                # Allupload
                json_data = re.findall(r"json_data = '(.+)';", content)
                if json_data:
@@ -393,7 +396,10 @@ def Videosresolve(url,name):
                # Picasaweb, Videobug
                if not vidlink:
                    soup = BeautifulSoup(content)
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/master
                    player_func = re.compile(r'(player_[^\(]+)\(\);').match
                    butts = soup.find_all('input', type='button', onclick=player_func)
 
