@@ -10,6 +10,9 @@
 		<setting id="list_korean_dramas" type="bool" label="30207" default="true"/>
 		<setting id="list_mainlan_dramas" type="bool" label="30208" default="true"/>
 		<setting id="list_taiwanese_dramas" type="bool" label="30209" default="true"/>
+		<setting id="list_japanese_dramas" type="bool" label="30211" default="true"/>
+
+		<setting id="list_movies" type="bool" label="30212" default="true"/>
    </category>
 	<category label="Auto-View">
 		<setting id="ga_privacy" type="bool" label="30100" default="false"/>
