@@ -55,7 +55,7 @@ def INDEX(url):
         try:
             link =link.encode("UTF-8")
         except: pass
-        newlink = ''.join(link.splitlines()).replace('\t','')
+        newlink = ''.join(link.splitlines()).replace('\t','').replace('&raquo;','')
         match=re.compile(r'<a href="([^"]+)" title="([^"]+)" class="movie-image" style="background-image: url\(([^\)]+)\);">').findall(newlink)
         for (vurl,vname,vimg) in match:
             names = vname.split(' - ')
