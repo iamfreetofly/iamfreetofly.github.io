@@ -48,6 +48,12 @@ def HOME():
             addDir(ADDON.getLocalizedString(30208),'http://'+domain+'/chinese-drama/',2,'')
         if ADDON.getSetting('list_taiwanese_dramas') == "true":
             addDir(ADDON.getLocalizedString(30209),'http://'+domain+'/taiwanese-drama/',2,'')
+        if ADDON.getSetting('list_korean_shows') == "true":
+            addDir(ADDON.getLocalizedString(30210),'http://'+domain+'/korean-show/',2,'')
+        if ADDON.getSetting('list_japanese_dramas') == "true":
+            addDir(ADDON.getLocalizedString(30211),'http://'+domain+'/japanese-drama/',2,'')
+        if ADDON.getSetting('list_movies') == "true":
+            addDir(ADDON.getLocalizedString(30212),'http://'+domain+'/movies/',2,'')            
 
 def INDEX(url):
     #try:
@@ -69,7 +75,8 @@ def INDEX(url):
         if(len(pagecontent)>0):
             match5=re.compile('<a href="(.+?)"[^>]*>(.+?)</a>').findall(pagecontent[0])
             for vurl,vname in match5:
-                addDir('[COLOR yellow]page: [/COLOR]' + cleanPage(vname),"http://"+domain+vurl,2,"")
+                #addDir('[COLOR yellow]page: [/COLOR]' + cleanPage(vname),"http://"+domain+vurl,2,"")
+                addDir('[COLOR yellow]page: [/COLOR]' + cleanPage(vname),url+vurl,2,"")
     #except: pass
 
 
@@ -243,8 +250,40 @@ def playVideo(videoType,videoId):
     elif (videoType == "tudou"):
         url = 'plugin://plugin.video.tudou/?mode=3&url=' + videoId
     else:
+##        try:
+##            xbmcPlayer = xbmc.Player()
+##            xbmcPlayer.play(videoId)
+##        except:
+        ResolveUrl(videoId,videoType)
+
+
+def ResolveUrl(url,name):
+        xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link,5000)")
+        sources = []
+        try:
+            label=name
+            hosted_media = urlresolver.HostedMediaFile(url=url, title=label)
+        
+            sources.append(hosted_media)
+        except:
+            print 'Error while trying to resolve %s' % url
+
+        source = urlresolver.choose_source(sources)
+        print "urlresolving" + url
+        if source:
+            vidlink = source.resolve()
+        else:
+            vidlink =""
+
         xbmcPlayer = xbmc.Player()
-        xbmcPlayer.play(videoId)
+        try:
+            xbmcPlayer.play(vidlink)
+        except:
+            d = xbmcgui.Dialog()
+            d.ok(url,"Letters for captcha incorrect",'Try again')
+
+
+
 
 def postContent(url,data,referr):
     opener = urllib2.build_opener()
@@ -409,6 +448,12 @@ def Videosresolve(url,name):
                        vidlink = zip(urls, qualities)
                    except Exception:
                        pass
+
+               if not vidlink:
+                   vids = re.findall(r'''{ *file *: *strdecode\('(.+?)'\).*?label *: *"(.*?)"''', content)
+                   for cryptic_url, quality in vids:
+                       url = base64.b64decode(urllib.unquote(cryptic_url)[::-1])
+                       vidlink.append((url, quality))
 
            elif (newlink.find("play44") > -1):
                 link=GetContent(newlink)
