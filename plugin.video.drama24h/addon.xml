@@ -3,7 +3,7 @@
   id="plugin.video.drama24h"
   version="1.0.5.1"
   name="drama24h"
-  provider-name="Dknight" (maintained by Iamfreetofly)>
+  provider-name="Dknight (maintained by Iamfreetofly)">
   <requires>
         <import addon="xbmc.python" version="2.1.0" optional="true" />
 		<import addon="script.module.beautifulsoup" version="3.0.8"/>
