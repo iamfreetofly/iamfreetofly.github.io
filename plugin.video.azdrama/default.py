@@ -11,6 +11,7 @@ import datetime
 import time
 import json
 import jsunpack
+import urlresolver
 from bs4 import BeautifulSoup as BS
 from urlparse import urljoin
 
@@ -24,7 +25,9 @@ if ADDON.getSetting('ga_visitor')=='':
 GA_PRIVACY = ADDON.getSetting('ga_privacy') == "true"
 DISPLAY_MIRRORS = ADDON.getSetting('display_mirrors') == "true"
 
-UASTR = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.0"
+#UASTR = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.0"
+#UASTR = "Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0"
+UASTR = "Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0"
 PATH = "AzDrama"  #<---- PLUGIN NAME MINUS THE "plugin.video"
 UATRACK = "UA-41910477-1"
 VERSION = "1.0.18.1" #<---- PLUGIN VERSION
@@ -250,15 +253,11 @@ def playVideo(videoType,videoId):
     elif (videoType == "tudou"):
         url = 'plugin://plugin.video.tudou/?mode=3&url=' + videoId
     else:
-##        try:
-##            xbmcPlayer = xbmc.Player()
-##            xbmcPlayer.play(videoId)
-##        except:
-        ResolveUrl(videoId,videoType)
+        xbmcPlayer = xbmc.Player()
+        xbmcPlayer.play(videoId)
 
 
-def ResolveUrl(url,name):
-        xbmc.executebuiltin("XBMC.Notification(Please Wait!, Loading video link,5000)")
+def ResolveUrl(name,url):
         sources = []
         try:
             label=name
@@ -269,9 +268,16 @@ def ResolveUrl(url,name):
             print 'Error while trying to resolve %s' % url
 
         source = urlresolver.choose_source(sources)
+
+        vidlink =""
+        
         print "urlresolving" + url
         if source:
-            vidlink = source.resolve()
+            try:
+                vidlink = source.resolve()
+            except:
+                d = xbmcgui.Dialog()
+                d.ok(url,"Video source is not currently available.",'Please try another source.')
         else:
             vidlink =""
 
@@ -279,10 +285,7 @@ def ResolveUrl(url,name):
         try:
             xbmcPlayer.play(vidlink)
         except:
-            d = xbmcgui.Dialog()
-            d.ok(url,"Letters for captcha incorrect",'Try again')
-
-
+            pass
 
 
 def postContent(url,data,referr):
@@ -784,7 +787,7 @@ def loadVideos(url,name):
                 videos = Videosresolve(frameurl, name)
                 for url, quality in videos:
                     pre = episode_name + ': ' if episode_name else ''
-                    addLink(pre + quality, url, 8, '', '')
+                    addDir2(pre + quality,url,12,"")
 
 
 def parseDate(dateString):
@@ -1023,6 +1026,14 @@ def get_params():
 
         return param
 
+def addDir2(name,url,mode,iconimage):
+        name = cleanName(name)
+        u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name.encode('utf-8'))
+        ok=True
+        liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
+        liz.setInfo( type="Video", infoLabels={ "Title": name } )
+        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)
+        return ok
 
 
 params=get_params()
@@ -1075,5 +1086,7 @@ elif mode==10:
        Episodes2(url,name)
 elif mode==11:
        CheckParts(url,name)
+elif mode==12:
+       ResolveUrl(name,url)
 
 xbmcplugin.endOfDirectory(int(sysarg))
