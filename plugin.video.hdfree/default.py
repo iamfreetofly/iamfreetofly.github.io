@@ -13,6 +13,10 @@ from urlparse import urljoin,urlsplit
 import datetime
 import time
 
+
+def BeautifulSoup(markup):
+    return BS(markup, 'html5lib')
+
 ADDON = xbmcaddon.Addon(id='plugin.video.hdfree')
 if ADDON.getSetting('ga_visitor')=='':
     from random import randint
@@ -24,10 +28,11 @@ UASTR = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.
 PATH = "HDFree"  #<---- PLUGIN NAME MINUS THE "plugin.video"          
 UATRACK="UA-41910477-1" #<---- GOOGLE ANALYTICS UA NUMBER   
 VERSION = "1.0" #<---- PLUGIN VERSION
-domainlist = ["azdrama.biz"]
+domainlist = ["hdfree.se"]
 domain = domainlist[int(ADDON.getSetting('domainurl'))]
 domainprefix = ["http://"]
-strdomain = "http://azdrama.biz/"
+#strdomain = "http://azdrama.biz/"
+strdomain = "http://hdfree.se"
 
 HEADERS = {
         'User-Agent':    'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
@@ -48,43 +53,43 @@ def HOME():
         if ADDON.getSetting('list_hk_movies') == "true":
             addDir('HK Movies','http://'+domain+'/browse/hongkong/movies/',12,'')
         if ADDON.getSetting('list_hk_shows') == "true":
-            addDir('HK TVShows','http://'+domain+'/browse/hongkong/tvshow/',2,'')
+            addDir('HK TV Shows','http://'+domain+'/browse/hongkong/tvshow/',2,'')
         if ADDON.getSetting('list_china_dramas') == "true":
             addDir('Chinese(China) Dramas','http://'+domain+'/browse/chinese/dramas/',2,'')
         if ADDON.getSetting('list_china_movies') == "true":
             addDir('Chinese(China) Movies','http://'+domain+'/browse/chinese/movies/',12,'')
         if ADDON.getSetting('list_china_shows') == "true":
-            addDir('Chinese(China) TVShows','http://'+domain+'/browse/chinese/tvshow/',2,'')
+            addDir('Chinese(China) TV Shows','http://'+domain+'/browse/chinese/tvshow/',2,'')
         if ADDON.getSetting('list_taiwan_dramas') == "true":
             addDir('Taiwanese Dramas','http://'+domain+'/browse/taiwanese/dramas/',2,'')
         if ADDON.getSetting('list_taiwan_movies') == "true":
             addDir('Taiwanese Movies','http://'+domain+'/browse/taiwanese/movies/',12,'')
         if ADDON.getSetting('list_taiwan_shows') == "true":
-            addDir('Taiwanese TVShows','http://'+domain+'/browse/taiwanese/tvshow/',2,'')
-##        if ADDON.getSetting('list_english_dramas') == "true":
-##            addDir('English Dramas','http://'+domain+'/browse/english/dramas/',2,'')
-##        if ADDON.getSetting('list_english_movies') == "true":
-##            addDir('English Movies','http://'+domain+'/browse/english/movies/',12,'')
-##        if ADDON.getSetting('list_english_shows') == "true":
-##            addDir('English TVShows','http://'+domain+'/browse/english/tvshow/',2,'')
+            addDir('Taiwanese TV Shows','http://'+domain+'/browse/taiwanese/tvshow/',2,'')
         if ADDON.getSetting('list_korean_dramas') == "true":
             addDir('Korean Dramas','http://'+domain+'/browse/korean/dramas/',2,'')
         if ADDON.getSetting('list_korean_movies') == "true":
             addDir('Korean Movies','http://'+domain+'/browse/korean/movies/',12,'')
         if ADDON.getSetting('list_korean_shows') == "true":
-            addDir('Korean TVShows','http://'+domain+'/browse/korean/tvshow/',2,'')
+            addDir('Korean TV Shows','http://'+domain+'/browse/korean/tvshow/',2,'')
         if ADDON.getSetting('list_japanese_dramas') == "true":
             addDir('Japanese Dramas','http://'+domain+'/browse/japanese/dramas/',2,'')
         if ADDON.getSetting('list_japanese_movies') == "true":
             addDir('Japanese Movies','http://'+domain+'/browse/japanese/movies/',12,'')
         if ADDON.getSetting('list_japanese_shows') == "true":
-            addDir('Japanese TVShows','http://'+domain+'/browse/japanese/tvshow/',2,'')
-        if ADDON.getSetting('list_english_dramas') == "true":
+            addDir('Japanese TV Shows','http://'+domain+'/browse/japanese/tvshow/',2,'')
+        if ADDON.getSetting('list_thailand_dramas') == "true":
             addDir('Thailand Dramas','http://'+domain+'/browse/thailand/dramas/',2,'')
-        if ADDON.getSetting('list_english_movies') == "true":
+        if ADDON.getSetting('list_thailand_movies') == "true":
             addDir('Thailand Movies','http://'+domain+'/browse/thailand/movies/',12,'')
-        if ADDON.getSetting('list_english_shows') == "true":
-            addDir('Thailand TVShows','http://'+domain+'/browse/thailand/tvshow/',2,'')
+        if ADDON.getSetting('list_thailand_shows') == "true":
+            addDir('Thailand TV Shows','http://'+domain+'/browse/thailand/tvshow/',2,'')
+        if ADDON.getSetting('list_others_dramas') == "true":
+            addDir('Others Dramas','http://'+domain+'/browse/others/dramas/',2,'')
+        if ADDON.getSetting('list_others_movies') == "true":
+            addDir('Others Movies','http://'+domain+'/browse/others/movies/',12,'')
+        if ADDON.getSetting('list_others_shows') == "true":
+            addDir('Others TV Shows','http://'+domain+'/browse/others/tvshow/',2,'')
 
 def INDEX(url):
     #try:
@@ -94,8 +99,9 @@ def INDEX(url):
         except: pass
         newlink = ''.join(link.splitlines()).replace('\t','').replace('<span aria-hidden="true">\xc2\xab</span>','Previous').replace('<span aria-hidden="true">\xc2\xbb</span>','Next').replace('<strong style="color:Red">','').replace('</strong>','').replace('&#39;','\'').replace('amp;','')
         listcontent=re.compile('<body>(.+?)</body>').findall(newlink)
-        match=re.compile('<div class="v-grid">(.+?)<a href="(.+?)" [^>]*><img alt="(.+?)" src="(.+?)" [^>]*></a>').findall(listcontent[0])
-        for (vtmp,vurl,vname,vimg) in match:
+        #match=re.compile('<div class="v-grid">(.+?)<a href="(.+?)" [^>]*><img alt="(.+?)" src="(.+?)" [^>]*></a>').findall(listcontent[0])
+        match=re.compile('<div class="v-grid">(.+?)<a href="(.+?)" [^>]*><img alt=[^>]* src="(.+?)" [^>]*></a>(.+?)<a href=[^>]* title=[^>]*>(.+?)</a>').findall(listcontent[0])
+        for (vtmp,vurl,vimg,vtmp2,vname) in match:
             try:
                   addDir(vname,"http://"+domain+"/watch-online"+vurl,7,vimg)
             except:
@@ -113,10 +119,11 @@ def INDEX2(url):
         try:
             link =link.encode("UTF-8")
         except: pass
-        newlink = ''.join(link.splitlines()).replace('\t','').replace('<span aria-hidden="true">\xc2\xab</span>','Previous').replace('<span aria-hidden="true">\xc2\xbb</span>','Next').replace('<strong style="color:Red">','').replace('</strong>','').replace('&#39;','\'').replace('amp;','')
+        newlink = ''.join(link.splitlines()).replace('\t','').replace('<span aria-hidden="true">\xc2\xab</span>','Previous').replace('<span aria-hidden="true">\xc2\xbb</span>','Next').replace('<strong style="color:Red">','').replace('</strong>','').replace('&#39;','\'').replace('amp;','').replace('&#250;','u')
         listcontent=re.compile('<body>(.+?)</body>').findall(newlink)
-        match=re.compile('<div class="v-grid">(.+?)<a href="(.+?)" [^>]*><img alt="(.+?)" src="(.+?)" [^>]*></a>').findall(listcontent[0])
-        for (vtmp,vurl,vname,vimg) in match:
+        #match=re.compile('<div class="v-grid">(.+?)<a href="(.+?)" [^>]*><img alt="(.+?)" src="(.+?)" [^>]*></a>').findall(listcontent[0])
+        match=re.compile('<div class="v-grid">(.+?)<a href="(.+?)" [^>]*><img alt=[^>]* src="(.+?)" [^>]*></a>(.+?)<a href=[^>]* title=[^>]*>(.+?)</a>').findall(listcontent[0])
+        for (vtmp,vurl,vimg,vtmp2,vname) in match:
             try:
                   addDir(vname,"http://"+domain+"/watch-online"+vurl,3,vimg)
             except:
@@ -125,7 +132,7 @@ def INDEX2(url):
         if(len(pagecontent)>0):
                 match5=re.compile('<a href="(.+?)"[^>]*>(.+?)</a>').findall(pagecontent[0])
                 for vurl,vname in match5:
-                    addDir('[COLOR yellow]page: [/COLOR]' + cleanPage(vname),"http://"+domain+vurl,13,"")
+                    addDir('[COLOR yellow]page: [/COLOR]' + cleanPage(vname),"http://"+domain+vurl,12,"")
     #except: pass
 
 
@@ -240,16 +247,16 @@ def Episodes(url,name,newmode):
             link =link.encode("UTF-8")
         except: pass
         newlink = ''.join(link.splitlines()).replace('\n\t','').replace('&#39;','\'').replace('amp;','')
-        listcontent=re.compile('<div style="border-bottom:1px [^>]*>Show all available episodes</div>(.+?)<div style="border-bottom:1px [^>]*>Please share[^>]*</div>').findall(newlink)
+##        listcontent=re.compile('<div style="border-bottom:1px [^>]*>Show all available episodes</div>(.+?)<div style="border-bottom:1px [^>]*>Please share[^>]*</div>').findall(newlink)
+        listcontent=re.compile('<div style="[^>]*">Watch & Download</div>(.+?)<div id="divComment"[^>]*>').findall(newlink)
         if(newmode==7):
             vidmode=3
         else:
             vidmode=9
-        match=re.compile('<a href="(.+?)" [^>]* title="(.+?)">(.+?)</a>').findall(listcontent[0])
+        match=re.compile('<a href="(.+?)" title="(.+?)">(.+?)</a>').findall(listcontent[0])
         for (vurl,vname,vtmp) in match:
             try:
                   addDir(vname,"http://"+domain+vurl,vidmode,"")
-                  break
             except:
                   addDir(vname.decode("utf-8"),"http://"+domain+vurl,vidmode,"")
         pagecontent=re.compile('<div class="wp-pagenavi" align=center>(.+?)</div>').findall(newlink)
@@ -1428,7 +1435,9 @@ def loadVideos(url,name):
 		match3=re.compile('</h1>\s*<iframe src="(.+?)" [^>]*>').findall(newlink)
 		match4=re.compile('<input type="button" value="Download" [^>]*\'(.+?)\',[^>]*>').findall(newlink)
 		match5=re.compile('<source src="(.+?)" type="video/mp4">').findall(newlink)
-		match6=re.compile('</h1>\s*</div>\s*<iframe src="(.+?)" [^>]*allowFullScreen></iframe>').findall(newlink)
+##		match6=re.compile('</h1>\s*</div>\s*<iframe src="(.+?)" [^>]*allowFullScreen></iframe>').findall(newlink)
+		match6=re.compile('</h1>\s*<iframe src="(.+?)" [^>]*allowFullScreen></iframe>').findall(newlink)
+		match7=re.compile('<div style="display:[^>]*"><a href="(.+?)" target=[^>]*>Download</a></div>').findall(newlink)
 ##		print ("============================ POSTING newlink ============================")
 ##		print newlink
 ##		print ("============================ POSTING match6 ============================")
@@ -1437,6 +1446,12 @@ def loadVideos(url,name):
                     vidlink = match[0]
                 elif(len(match2) > 0):
                     vidlink = match2[0]
+                    
+                elif(len(match7) > 0):
+                    vidlink = match7[0]
+##                    print ("============================ POSTING match7 vidlink ============================")
+##                    print vidlink
+                    
 ##                elif(len(match3) > 0):
 ##                    vidlink = match3[0]
 ##                    loadVideos(vidlink,"")
@@ -1455,14 +1470,46 @@ def loadVideos(url,name):
 ##                    print ("============================ POSTING vidlink ============================")
 ##                    print vidlink
                     loadVideos(vidlink,"")
+##                elif(len(match5) > 0):
+##                    vidlink2 = "http://hdmovie168.com" + match5[0]
+####                    print ("============================ POSTING vidlink2 ============================")
+####                    print vidlink2
+##
+##                    soup = BeautifulSoup(newlink)
+##                    player_func = re.compile(r'(optionPlayer_[^\(]+)\(\);').match
+##                    print ("============================ POSTING player_func ============================")
+##                    print player_func                    
+##                    butts = soup.find_all('input', type='button', onclick=player_func)
+##
+##                    funcs = [player_func(b['onclick']).group(1) for b in butts]
+##                    qualities = [b['value'] for b in butts]
+##
+##                    try:
+##                       func_bodies = [re.findall(r'%s\(\) *{(.+)};' % f, content)[0] for f in funcs]
+##                       re_flash = re.compile(r"video *= *{[^:]+: *'(.*?)' *}")
+##                       re_html5 = re.compile(r'<source.*?src=\"(.*?)\"')
+##
+##                       urls = [(re_flash.findall(fb) or re_html5.findall(fb))[0] for fb in func_bodies]
+##                       vidlink = zip(urls, qualities)
+##                    except Exception:
+##                       pass
+
+##                    print ("============================ POSTING soup ============================")
+##                    print soup
+
+
                 elif(len(match4) > 0):
                     vidlink = match4[0]
 ##                    print ("============================ POSTING vidlink2 ============================")
 ##                    print vidlink
+
                 else:
                     vidlink = ""
 
                 redirlink = vidlink
+                
+##                print ("============================ POSTING redirlink ============================")
+##                print redirlink
                 if(redirlink.find("googlevideo.com") > 0):
                     vidlink = urllib.unquote(vidlink)
                     Videosresolve(vidlink,name)

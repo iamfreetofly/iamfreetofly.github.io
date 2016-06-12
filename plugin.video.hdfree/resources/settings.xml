@@ -11,18 +11,18 @@
 		<setting id="list_taiwan_dramas" type="bool" label="30208" default="true"/>
 		<setting id="list_taiwan_movies" type="bool" label="30209" default="true"/>
 		<setting id="list_taiwan_shows" type="bool" label="30210" default="true"/>
-		<setting id="list_english_dramas" type="bool" label="30211" default="true"/>
-		<setting id="list_english_movies" type="bool" label="30212" default="true"/>
-		<setting id="list_english_shows" type="bool" label="30213" default="true"/>
-		<setting id="list_korean_dramas" type="bool" label="30214" default="true"/>
-		<setting id="list_korean_movies" type="bool" label="30215" default="true"/>
-		<setting id="list_korean_shows" type="bool" label="30216" default="true"/>
-		<setting id="list_japanese_dramas" type="bool" label="30217" default="true"/>
-		<setting id="list_japanese_movies" type="bool" label="30218" default="true"/>
-		<setting id="list_japanese_shows" type="bool" label="30219" default="true"/>
-		<setting id="list_taiwan_dramas" type="bool" label="30220" default="true"/>
-		<setting id="list_taiwan_movies" type="bool" label="30221" default="true"/>
-		<setting id="list_taiwan_shows" type="bool" label="302022" default="true"/>
+		<setting id="list_korean_dramas" type="bool" label="30211" default="true"/>
+		<setting id="list_korean_movies" type="bool" label="30212" default="true"/>
+		<setting id="list_korean_shows" type="bool" label="30213" default="true"/>
+		<setting id="list_japanese_dramas" type="bool" label="30214" default="true"/>
+		<setting id="list_japanese_movies" type="bool" label="30215" default="true"/>
+		<setting id="list_japanese_shows" type="bool" label="30216" default="true"/>
+		<setting id="list_thailand_dramas" type="bool" label="30217" default="true"/>
+		<setting id="list_thailand_movies" type="bool" label="30218" default="true"/>
+		<setting id="list_thailand_shows" type="bool" label="30219" default="true"/>
+		<setting id="list_others_dramas" type="bool" label="30220" default="true"/>
+		<setting id="list_others_movies" type="bool" label="30221" default="true"/>
+		<setting id="list_others_shows" type="bool" label="30222" default="true"/>
    </category>
 	<category label="Auto-View">
 		<setting id="ga_privacy" type="bool" label="30100" default="false"/>
