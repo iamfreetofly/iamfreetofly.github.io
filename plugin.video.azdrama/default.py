@@ -11,9 +11,9 @@ import datetime
 import time
 import json
 import jsunpack
-import urlresolver
 from bs4 import BeautifulSoup as BS
 from urlparse import urljoin
+import urlresolver
 
 def BeautifulSoup(markup):
     return BS(markup, 'html5lib')
@@ -25,11 +25,9 @@ if ADDON.getSetting('ga_visitor')=='':
 GA_PRIVACY = ADDON.getSetting('ga_privacy') == "true"
 DISPLAY_MIRRORS = ADDON.getSetting('display_mirrors') == "true"
 
-#UASTR = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.0"
-#UASTR = "Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0"
-UASTR = "Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0"
+UASTR = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.0"
 PATH = "AzDrama"  #<---- PLUGIN NAME MINUS THE "plugin.video"
-UATRACK = "UA-41910477-1"
+UATRACK = "UA-76815405-1"
 VERSION = "1.0.18.1" #<---- PLUGIN VERSION
 domainlist = ["azdrama.net", "www.azdrama.info", "www1.azdrama.net", "icdrama.se", "azdrama.se"]
 domain = domainlist[int(ADDON.getSetting('domainurl'))]
@@ -56,32 +54,32 @@ def HOME():
         if ADDON.getSetting('list_japanese_dramas') == "true":
             addDir(ADDON.getLocalizedString(30211),'http://'+domain+'/japanese-drama/',2,'')
         if ADDON.getSetting('list_movies') == "true":
-            addDir(ADDON.getLocalizedString(30212),'http://'+domain+'/movies/',2,'')            
+            addDir(ADDON.getLocalizedString(30212),'http://'+domain+'/movies/',2,'')
 
 def INDEX(url):
-    #try:
-        link = GetContent(url)
-        try:
-            link =link.encode("UTF-8")
-        except: pass
-        newlink = ''.join(link.splitlines()).replace('\t','').replace('&raquo;','')
-        match=re.compile(r'<a href="([^"]+)" title="([^"]+)" class="movie-image" style="background-image: url\(([^\)]+)\);">').findall(newlink)
-        for (vurl,vname,vimg) in match:
-            names = vname.split(' - ')
-            title_lang_option = ADDON.getSetting('title_language')
-            if title_lang_option == '1':
-                vname = names[0]
-            elif title_lang_option == '2':
-                vname = names[-1]
-            addDir(vname,vurl,5,vimg)
-        pagecontent=re.compile('<ul class="pager">(.+?)</ul>').findall(newlink)
-        if(len(pagecontent)>0):
-            match5=re.compile('<a href="(.+?)"[^>]*>(.+?)</a>').findall(pagecontent[0])
-            for vurl,vname in match5:
-                #addDir('[COLOR yellow]page: [/COLOR]' + cleanPage(vname),"http://"+domain+vurl,2,"")
-                addDir('[COLOR yellow]page: [/COLOR]' + cleanPage(vname),url+vurl,2,"")
-    #except: pass
+    content = GetContent(url)
+    soup = BeautifulSoup(content)
 
+    tiles = soup.select('a.movie-image')
+    for t in tiles:
+        imageurl = re.search(r'url\((.+?)\)', t['style']).group(1)
+        vidurl = urljoin(url, t['href'])
+        displayname = t['title']
+        names = displayname.split(' - ')
+
+        title_lang_option = ADDON.getSetting('title_language')
+        if title_lang_option == '1':
+            displayname = names[0]
+        elif title_lang_option == '2':
+            displayname = names[-1]
+
+        addDir(displayname, vidurl, 5, imageurl)
+
+    pages = soup.select('ul.pager > li > span > a')
+    for p in pages:
+        pagename = p['title']
+        pageurl = urljoin(url, p['href'])
+        addDir(pagename, pageurl, 2, '')
 
 def SEARCH():
     try:
@@ -192,6 +190,8 @@ def Episodes(url,name,newmode):
         if match:
             for (vurl,vname) in match:
                 vname = vname.lstrip('Watch ')
+                if not url.endswith('/recently-updated/'):
+                    vname = vname.split('-')[-1].strip()
                 addDir(vname,vurl,vidmode,"")
             pagecontent=re.compile('<div class="wp-pagenavi" align=center>(.+?)</div>').findall(newlink)
             if(len(pagecontent)>0):
@@ -253,40 +253,14 @@ def playVideo(videoType,videoId):
     elif (videoType == "tudou"):
         url = 'plugin://plugin.video.tudou/?mode=3&url=' + videoId
     else:
-        xbmcPlayer = xbmc.Player()
-        xbmcPlayer.play(videoId)
+        if any(x in videoId for x in ['h265.se', 'uptobox.com', 'uptostream.com', 'openload.co']):
+            videoId = urlresolver.resolve(videoId)
 
-
-def ResolveUrl(name,url):
-        sources = []
-        try:
-            label=name
-            hosted_media = urlresolver.HostedMediaFile(url=url, title=label)
-        
-            sources.append(hosted_media)
-        except:
-            print 'Error while trying to resolve %s' % url
-
-        source = urlresolver.choose_source(sources)
-
-        vidlink =""
-        
-        print "urlresolving" + url
-        if source:
-            try:
-                vidlink = source.resolve()
-            except:
-                d = xbmcgui.Dialog()
-                d.ok(url,"Video source is not currently available.",'Please try another source.')
+        if videoId:
+            xbmcPlayer = xbmc.Player()
+            xbmcPlayer.play(videoId)
         else:
-            vidlink =""
-
-        xbmcPlayer = xbmc.Player()
-        try:
-            xbmcPlayer.play(vidlink)
-        except:
-            pass
-
+            xbmc.executebuiltin('Notification(Info:,Video not playable,5000,)')
 
 def postContent(url,data,referr):
     opener = urllib2.build_opener()
@@ -409,18 +383,20 @@ def Videosresolve(url,name):
                 vidlink = [(media_url[0], 'Unknown Quality')]
            elif (newlink.find("videobug") > -1):
                content = GetContent(newlink)
+               content = jsunpack.unpack(content)
                vidlink = []
 
                # unobscurify
                key = 5
                unobscurify = lambda s: urllib.unquote(''.join(chr(ord(c) - key) for c in urllib.unquote(s)))
-               df = re.search(r"dF\('(.*)'\)", content)
+               df = re.search(r"dF\(\\'(.*)\\'\)", content)
                if df:
                    script_end = content.find('</script>', df.end())
                    script_end = script_end + 9 if script_end > -1 else -1
                    content = content[:script_end] + unobscurify(df.group(1)) + content[script_end:]
-                   
+
                # Allupload
+               # http://videobug.se/vid-a/g2S5k34-MoC2293iUaa9Hw
                json_data = re.findall(r"json_data = '(.+)';", content)
                if json_data:
                    strdecode = lambda s: base64.b64decode(urllib.unquote(s)[::-1])
@@ -433,9 +409,9 @@ def Videosresolve(url,name):
                        pass
 
                # Picasaweb, Videobug
+               # http://videobug.se/video/Wz3_oCoEYozRSbJFQo4fkjmuvR6LpsFHM-XZya5tuk6stTXWdUeyplq5vVvSm0Yr0MXPFUmLt2XqrbLMPnE_Mgz8NbhXMZ6XFDI4hj253Z7af95WQPPDlpizIuuUXavEJqB8-bXuKbx6HTCMb5p5FC90yg1kXJb6?
                if not vidlink:
                    soup = BeautifulSoup(content)
-
                    player_func = re.compile(r'(player_[^\(]+)\(\);').match
                    butts = soup.find_all('input', type='button', onclick=player_func)
 
@@ -452,6 +428,7 @@ def Videosresolve(url,name):
                    except Exception:
                        pass
 
+               # http://videobug.se/vid-al/XNkjCT5pBx1YlndruYWdWg?&caption=-sgCv7BkuLZn41-ZxxJZhTsKYcZIDgJPGYNOuIpulC_4kcrZ9k3fGQabH5rDAKgiLMVJdesVZPs
                if not vidlink:
                    vids = re.findall(r'''{ *file *: *strdecode\('(.+?)'\).*?label *: *"(.*?)"''', content)
                    for cryptic_url, quality in vids:
@@ -787,7 +764,7 @@ def loadVideos(url,name):
                 videos = Videosresolve(frameurl, name)
                 for url, quality in videos:
                     pre = episode_name + ': ' if episode_name else ''
-                    addDir2(pre + quality,url,12,"")
+                    addLink(pre + quality, url, 8, '', '')
 
 
 def parseDate(dateString):
@@ -961,7 +938,7 @@ def APP_LAUNCH():
 
 checkGA()
 
-def addLink(name,url,mode,iconimage,mirrorname):
+def addLink(name,url,mode,iconimage,mirrorname):        
         name = cleanName(name)
         u=sys.argv[0]+"?url="+urllib.quote_plus(url.encode('utf-8'))+"&mode="+str(mode)+"&name="+urllib.quote_plus(name.encode('utf-8'))+"&mirrorname="+urllib.quote_plus(mirrorname)
         ok=True
@@ -969,7 +946,7 @@ def addLink(name,url,mode,iconimage,mirrorname):
         liz.setInfo( type="Video", infoLabels={ "Title": name } )
         contextMenuItems = []
         liz.addContextMenuItems(contextMenuItems, replaceItems=True)
-        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
+        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz)
         return ok
 
 def addNext(formvar,url,mode,iconimage):
@@ -1026,14 +1003,6 @@ def get_params():
 
         return param
 
-def addDir2(name,url,mode,iconimage):
-        name = cleanName(name)
-        u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name.encode('utf-8'))
-        ok=True
-        liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
-        liz.setInfo( type="Video", infoLabels={ "Title": name } )
-        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)
-        return ok
 
 
 params=get_params()
@@ -1086,7 +1055,5 @@ elif mode==10:
        Episodes2(url,name)
 elif mode==11:
        CheckParts(url,name)
-elif mode==12:
-       ResolveUrl(name,url)
 
 xbmcplugin.endOfDirectory(int(sysarg))
