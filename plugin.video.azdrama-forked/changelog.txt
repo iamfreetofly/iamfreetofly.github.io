@@ -1,0 +1,13 @@
+1.0.0 - forked from plugin.video.azdrama-1.0.25
+1.0.1 - add chinese strings and display chinese show names
+1.0.2 - fix videobug resolver
+1.0.3 - add option to show english titles or original titles
+1.1.0 - adapt to azdrama's redesign
+1.1.1 - fix bug (not able to list episodes on Helix)
+1.1.2 - adapt to video source changes
+1.1.3 - fix (video sources and mirrors shown on same directory)
+1.1.4 - adapt to video source changes (Allupload)
+1.1.5
+- show pages
+- add movies, Korean variety shows, and Japanese dramas
+- show only episodes in episodes listings
