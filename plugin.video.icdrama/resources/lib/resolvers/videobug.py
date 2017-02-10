@@ -95,12 +95,17 @@ class Videobug(UrlResolver, GA):
         # http://videobug.se/vid-a/g2S5k34-MoC2293iUaa9Hw
         json_data = re.findall(r"json_data = '(.+)';", html)
         if json_data:
-            strdecode = lambda s: base64.b64decode(urllib.unquote(s)[::-1])
+            strdecode_1 = lambda s: base64.b64decode(urllib.unquote(s)[::-1]) # no longer used?
+            strdecode_2 = lambda s: base64.b64decode(urllib.unquote(s))
             try:
                 hashes = json.loads(json_data[0])
                 exclude = ['Subtitles', 'image', 'JS', 'ADV']
                 videos = [h for h in hashes if h['s'] not in exclude]
-                streams = [(strdecode(h['u']), h['s']) for h in videos]
+                # try both decode methods
+                try:
+                    streams = [(strdecode_1(h['u']), h['s']) for h in videos]
+                except Exception:
+                    streams = [(strdecode_2(h['u']), h['s']) for h in videos]
             except Exception:
                 pass
 
