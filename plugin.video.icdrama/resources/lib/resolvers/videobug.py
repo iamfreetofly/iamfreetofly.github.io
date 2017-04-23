@@ -3,7 +3,7 @@ import json
 import urllib
 import base64
 import urlresolver
-from urllib2 import urlopen
+from urllib2 import urlopen, Request
 from bs4 import BeautifulSoup
 from resources.lib import common
 from resources.lib.resolvers.__ga import GA
@@ -18,7 +18,8 @@ class Videobug(UrlResolver, GA):
     def get_media_url(self, host, media_id):
         try:
             url = self.get_url(host, media_id)
-            html = urlopen(url).read(2*1000*1000)
+            req = Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            html = urlopen(req).read(2*1000*1000)
             streams = self._extract_streams(html)
 
             if not streams:
