@@ -1,17 +1,15 @@
 import re
 import urllib
-from urllib2 import urlopen
 from urlparse import urljoin, urlparse
 from bs4 import BeautifulSoup
-from resources.lib import cache, config
+from resources.lib import cache, config, common
 
 @cache.memoize()
 def _get(url):
     # only scrape within the site
     if url.startswith(config.base_url): # good enough check
         # should not be larger than 1MB
-        html = urlopen(url).read(1000*1000)
-        return html
+        return common.webread(url)
     else:
         raise Exception('Bad URL: %s' % url)
 

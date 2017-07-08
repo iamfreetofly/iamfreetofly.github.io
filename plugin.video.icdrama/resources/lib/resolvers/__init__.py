@@ -1,1 +1,1 @@
-from resources.lib.resolvers import icdrama, videobug
+from resources.lib.resolvers import icdrama, videobug, h265

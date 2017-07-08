@@ -1,30 +1,30 @@
 import sys
 import xbmc
 import xbmcgui
-import xbmcaddon
 import xbmcplugin
-import urlresolver
+import xbmcaddon
 from contextlib import contextmanager
 from os.path import abspath, dirname
 from urlresolver.hmf import HostedMediaFile
 from urllib import urlencode
+import requests
 
 _plugin_url = sys.argv[0]
 _handle = int(sys.argv[1])
-_addon = xbmcaddon.Addon()
 _dialog = xbmcgui.Dialog()
 
-addon_name = _addon.getAddonInfo('name')
-addon_id = _addon.getAddonInfo('id')
-addon_version = _addon.getAddonInfo('version')
-profile_dir = xbmc.translatePath(_addon.getAddonInfo('profile'))
-get_string = _addon.getLocalizedString
+profile_dir = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
 
 def debug(s):
     xbmc.log(str(s), xbmc.LOGDEBUG)
 
 def error(s):
     xbmc.log(str(s), xbmc.LOGERROR)
+
+def webread(url):
+    headers = {'User-Agent': xbmcaddon.Addon().getSetting('user_agent')}
+    response = requests.get(url, headers=headers)
+    return response.content
 
 def action_url(action, **action_args):
     action_args['action'] = action
@@ -42,7 +42,7 @@ def end_dir():
 
 def diritem(label_or_stringid, url, image='', isfolder=True, context_menu=[]):
     if type(label_or_stringid) is int:
-        label = get_string(label_or_stringid)
+        label = xbmcaddon.Addon().getLocalizedString(label_or_stringid)
     else:
         label = label_or_stringid
     listitem = xbmcgui.ListItem(label, iconImage=image)
@@ -56,6 +56,7 @@ def diritem(label_or_stringid, url, image='', isfolder=True, context_menu=[]):
     )
 
 def popup(s):
+    addon_name = xbmcaddon.Addon().getAddonInfo('name')
     try:
         # Gotham (13.0) and later
         _dialog.notification(addon_name, s)
@@ -69,7 +70,10 @@ def resolve(url):
     # import the resolvers so that urlresolvers pick them up
     import resources.lib.resolvers
     hmf = HostedMediaFile(url)
-    return hmf.resolve()
+    try:
+        return hmf.resolve()
+    except AttributeError:
+        return False
 
 def sleep(ms):
     xbmc.sleep(ms)

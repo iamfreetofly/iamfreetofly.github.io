@@ -3,67 +3,54 @@ import json
 import urllib
 import base64
 import urlresolver
-from urllib2 import urlopen, Request
+import xbmcaddon
 from bs4 import BeautifulSoup
 from resources.lib import common
-from resources.lib.resolvers.__ga import GA
 from urlresolver.resolver import UrlResolver, ResolverError
 from urlresolver.plugins.lib import jsunpack
 
-class Videobug(UrlResolver, GA):
+class Videobug(UrlResolver):
     name = 'Videobug'
     host = 'videobug.se'
     domains = [host]
 
     def get_media_url(self, host, media_id):
-        try:
-            url = self.get_url(host, media_id)
-            req = Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-            html = urlopen(req).read(2*1000*1000)
-            streams = self._extract_streams(html)
+        url = self.get_url(host, media_id)
 
-            if not streams:
-                raise ResolverError('Matches no template: ' + url)
+        html = common.webread(url)
+        if not len(html):
+            raise ResolverError('Videobug resolver: no html from ' + url)
 
-            urls, labels = zip(*streams)
+        streams = self._extract_streams(html)
 
-            for lab in labels:
-                self.crowdsource_stream_name(lab)
+        if not streams:
+            raise ResolverError('Videobug resolver: no streams found in ' + url)
 
-            if len(labels) == 1:
-                ind = 0
-            else:
-                heading = common.get_string(33100)
-                ind = common.select(heading, labels)
-                if ind < 0:
-                    return False
+        urls, labels = zip(*streams)
 
-            self.ga_track('stream select', labels[ind])
+        if len(labels) == 1:
+            ind = 0
+        else:
+            heading = xbmcaddon.Addon().getLocalizedString(33100)
+            ind = common.select(heading, labels)
+            if ind < 0:
+                common.error("Videobug resolver: stream selection cancelled")
+                return ''
 
-            url = urls[ind]
-            if re.match(r'https?://redirector.googlevideo.com/', url):
-                # Kodi can play directly, skip further resolve
-                vidurl = url
-            else:
-                vidurl = urlresolver.resolve(url)
+        if ('redirector.googlevideo.com' in urls[ind] or
+            'blogspot.com' in urls[ind]):
+            # Kodi can play directly, skip further resolve
+            return urls[ind]
+        else:
+            mediaurl = urlresolver.resolve(urls[ind])
+            if not mediaurl:
+                raise ResolverError("Videobug resolver: resolve failed for mediaurl " + urls[ind])
 
-            if vidurl:
-                self.ga_track('resolution success', labels[ind])
-            else:
-                self.ga_track('resolution failure', labels[ind])
-
-            return vidurl
-
-        except Exception as e:
-            common.error('%s UrlResolver Exception: %s' % (self.name, e))
-            common.popup(common.get_string(33300))
-            self.ga_track('resolution exception: %s' % e)
-            return False
-
+            return mediaurl
 
     def get_url(self, host, media_id):
         if host != self.host:
-            raise ResolverError('Invalid host: %s' % host)
+            raise ResolverError('Videobug resolver: Invalid host: %s' % host)
         return 'http://%s/%s' % (host, media_id)
 
     url_pattern = re.compile(r'http://(%s)/(.*)' % re.escape(host))
@@ -72,25 +59,38 @@ class Videobug(UrlResolver, GA):
         try:
             return r.groups()
         except AttributeError:
-            raise ResolverError('Invalid URL: %s' % url)
+            raise ResolverError('Videobug resolver: Invalid URL: %s' % url)
 
     def valid_url(self, web_url, host):
         r = re.match(self.url_pattern, web_url)
         return bool(r) or (host == self.host)
+
+    def _unobscurify(self, s, key):
+        return urllib.unquote(''.join(chr(ord(c) - key) for c in urllib.unquote(s)))
 
     def _extract_streams(self, html):
         '''Return list of streams (tuples (url, label))
         '''
         streams = [] # list of tuples (url, label)
 
-        # unobscurify
-        key = 5
-        unobscurify = lambda s: urllib.unquote(''.join(chr(ord(c) - key) for c in urllib.unquote(s)))
         df = re.search(r"dF\(\\?'(.*)\\?'\)", html)
         if df:
             script_end = html.find('</script>', df.end())
             script_end = script_end + 9 if script_end > -1 else -1
-            html = html[:script_end] + unobscurify(df.group(1)) + html[script_end:]
+            unobscured = ''
+            result = False
+            for key in range(1, 255):
+                unobscured = self._unobscurify(df.group(1), key)
+                result = bool(BeautifulSoup(unobscured, "html5lib").find('script'))
+                if result:
+                    break
+
+            if not result:
+                raise ResolverError('Videobug resolver: error unobscurifying dF()')
+
+            html = html[:script_end] + unobscured + html[script_end:]
+        else:
+            raise ResolverError('Videobug resolver: no dF() found')
 
         # Allupload
         # http://videobug.se/vid-a/g2S5k34-MoC2293iUaa9Hw
@@ -140,8 +140,7 @@ class Videobug(UrlResolver, GA):
         # http://videobug.se/vid/pVobcNozEWmTkarNnwX06w
         if not streams:
             if jsunpack.detect(html):
-                unpacked = jsunpack.unpack(html)
-                streams =  self._extract_streams(unpacked)
+                streams = self._extract_streams(jsunpack.unpack(html))
 
         # remove this hardcoded youtube link
         streams = [(u, l) for u, l in streams if u != 'https://www.youtube.com/watch?v=niBTIQIYlv8']

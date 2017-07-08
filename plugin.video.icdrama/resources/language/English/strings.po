@@ -158,8 +158,8 @@ msgid "Original title"
 msgstr "Original title"
 
 msgctxt "#33204"
-msgid "Help improve add-on by providing anonymous data"
-msgstr "Help improve add-on by providing anonymous data"
+msgid "User-Agent"
+msgstr "User-Agent"
 
 # Messages
 ###################################

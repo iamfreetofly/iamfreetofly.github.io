@@ -1,3 +1,14 @@
+1.2.7 - 2017-06-27
+ - Moved to python "requests" for web operations.
+ - User-Agent now a setting.
+ - H265 resolver added.
+
+1.2.6.3 - 2017-06-25
+ - Much improved error handling and logging.
+
+1.2.6.2 - 2017-06-24
+ - Remove google analytics
+
 1.2.6 - 2017-04-09
  - Fix: Not able to resolve URLs
 

@@ -158,8 +158,8 @@ msgid "Original title"
 msgstr "原本名稱"
 
 msgctxt "#33204"
-msgid "Help improve add-on by providing anonymous data"
-msgstr "提供匿名數據以幫助改善附加元件"
+msgid "User-Agent"
+msgstr "使用者识别字串"
 
 # Messages
 ###################################
