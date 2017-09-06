@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?xml version="1.0" encoding="UTF-8"?>
 <addons>
 <addon id="plugin.audio.ukradio"
@@ -196,3 +197,203 @@
 	</extension>
 </addon>
 </addons>
+=======
+<?xml version="1.0" encoding="UTF-8"?>
+<addons>
+<addon id="plugin.audio.ukradio"
+       name="[I][/I]RadioPlayer.co.uk"
+       version="0.3.4"
+       provider-name="The[COLOR tan]Highway[/COLOR]">
+  <requires>
+  	<import addon="xbmc.python" version="2.1.0"/>
+  	<import addon="script.module.t0mm0.common" version="1.0.0"/>
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="default.py">
+  	<provides>audio</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+  	<summary>Handles Videos for MovieFork.com</summary>
+  	<description>Play Movies and TV shows from MovieFork.com.  Initial Project forked from plugin.video.solarmovie.so.</description>
+  	<disclaimer lang="en">This Project is designed for xbmc v13.x originally and currently being kept up on one of the nightly xbmcc v13.x builds. It gets a slight bit of testing as I use it myself, a LOT, on a Windows 7 OS. Any other OS's / builds of xbmc have not be tested on yet, but I do feel free to try and test it out on them. Some parts of this addon may not be legal in your country of residence - please check with your local laws before installing. I take no responsibility for any problems this plugin might in any way, form, shape or size cause. This is project is for a LEARNING EXPERIANCE.</disclaimer>
+  	<language>en</language>
+  	<platform>all</platform>
+  	<forum>http://www.xbmchub.com/forums/highway99s-xbmc-repo/</forum>
+  	<website>http://github.com/HIGHWAY99/plugin.audio.ukradio/</website>
+  	<email></email>
+  	<source>http://github.com/HIGHWAY99/plugin.audio.ukradio/archive/master.zip</source>
+  </extension>
+</addon>
+
+<addon
+  id="plugin.video.azdrama"
+  version="1.0.29.1"
+  name="azdrama.net"
+  provider-name="Dknight (maintained by cthlo)">
+  <requires>
+        <import addon="xbmc.python" version="2.1.0" optional="true" />
+		<import addon="script.module.html5lib" version="0.999.0"/>
+		<import addon="script.module.beautifulsoup4" version="4.3.2"/>
+		<import addon="script.module.simplejson" />
+		<import addon="script.module.t0mm0.common" version="1.1.0"/>
+    <import addon="script.module.urlresolver" version="2.10.11"/>
+  </requires>
+  <extension point="xbmc.python.pluginsource"
+            library="default.py">
+        <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary>azdrama.net</summary>
+    <description>Watch azdrama.net (Chinese)Videos</description>
+    <platform>all</platform>
+  </extension>
+</addon>
+
+<addon
+  id="plugin.video.drama24h"
+  version="1.0.5.1"
+  name="drama24h"
+  provider-name="Dknight (maintained by Iamfreetofly)">
+  <requires>
+        <import addon="xbmc.python" version="2.1.0" optional="true" />
+		<import addon="script.module.beautifulsoup" version="3.0.8"/>
+		<import addon="script.module.urlresolver" version="2.1.2"/>
+		<import addon="script.module.simplejson" />
+		<import addon="script.module.t0mm0.common" version="1.1.0"/>
+  </requires>
+  <extension point="xbmc.python.pluginsource"
+            library="default.py">
+        <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary>drama24h</summary>
+    <description>Watch drama24h (Chinese)Videos</description>
+    <platform>all</platform>
+  </extension>
+</addon>
+
+<addon
+  id="plugin.video.hdfree"
+  version="1.0.38"
+  name="HDFree.Co"
+  provider-name="Iamfreetofly">
+  <requires>
+        <import addon="xbmc.python" version="2.1.0" optional="true" />
+		<import addon="script.module.beautifulsoup" version="3.0.8"/>
+		<import addon="script.module.simplejson" />
+		<import addon="script.module.t0mm0.common" version="1.1.0"/>
+		<import addon="script.module.urlresolver"/>
+  </requires>
+  <extension point="xbmc.python.pluginsource"
+            library="default.py">
+        <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary>HDFree.Co</summary>
+    <description>Watch HDFree.Se (Chinese)Videos</description>
+    <platform>all</platform>
+  </extension>
+</addon>
+
+<addon id="plugin.video.icdrama" version="1.5.0" name="Icdrama" provider-name="aznhusband, General-Meow, dumbo0001, cthlo">
+  <requires>
+    <import addon="xbmc.python" version="2.1.0"/>
+    <import addon="script.module.html5lib" version="0.999.0"/>
+    <import addon="script.module.beautifulsoup4" version="4.3.2"/>
+    <import addon="script.module.requests" version="2.9.1"/>
+    <import addon="script.module.urlresolver" version="3.0.34"/>
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="addon.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary>Dramas, shows, and movies from icdrama.se</summary>
+    <description>Provides contents from icdrama.se. "Happy wife, happy life"</description>
+    <disclaimer>This addon is not affiliated with icdrama.se</disclaimer>
+    <platform>all</platform>
+    <license>MIT License</license>
+  </extension>
+</addon>
+
+<addon
+  id="plugin.video.SportsDevil"
+  version="2016.05.03"
+  name="SportsDevil"
+  provider-name="SportsDevil">
+  <requires>
+   <import addon="xbmc.python" version="2.14.0"/>
+   <import addon="script.module.simplejson" />
+   <import addon="script.module.six" />
+   <import addon="script.module.requests" />
+   <import addon="script.module.livestreamer" />
+   <import addon="script.module.pydevd" version="4.4.0" optional="true"/>
+  </requires>
+  <extension
+    point="xbmc.python.pluginsource"
+    library="default.py">
+   <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary>Play videos of different sports streaming sites</summary>
+    <description>Play videos of different sports streaming sites</description>
+    <license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
+    <platform>all</platform>
+  </extension>
+</addon>
+
+<addon id="script.module.t0mm0.common"
+	     name="t0mm0's common stuff"
+	     version="2.1.1"
+	     provider-name="t0mm0">
+  <requires>
+    <import addon="xbmc.python" version="2.1.0" />
+  </requires>
+  <extension point="xbmc.python.module" library="lib" />
+  <extension point="xbmc.addon.metadata">
+    <platform>all</platform>
+    <summary lang="en">Collection of commonly used addon routines</summary>
+    <description lang="en">Collection of commonly used addon routines to simplify addon development.</description>
+  </extension>
+</addon>
+
+<addon id="script.module.turtle" name="Turtle" version="1.0.8"
+	provider-name="AJ">
+	<requires>
+		<import addon="xbmc.python" version="2.0" />
+		<import addon="script.module.simplejson" version="2.0.10" />
+		<import addon="script.module.beautifulsoup" version="3.2.0" />
+	</requires>
+	<extension point="xbmc.python.module" library="lib" />
+	<extension point="xbmc.addon.metadata">
+		<summary>XBMC add-on framework</summary>
+		<description>XBMC add-on provides a simplest way to configure action
+			to be performed for each add-on request using XML.</description>
+		<disclaimer>This addon makes no warranties, expressed or implied, and
+			hereby disclaims and negates all other warranties, including without
+			limitation, implied warranties or conditions of merchantability,
+			fitness for a particular purpose, or non-infringement of intellectual
+			property or other violation of rights. Further, PlayIt addon does not
+			warrant or make any representations concerning the accuracy, likely
+			results, or reliability of the use of the materials on the Internet
+			web site where from data is retrieved or otherwise relating to such
+			materials or on any sites linked to this addon. Videos are soruced
+			from video-hosting websites that are having full rights to remove
+			such access to video if required.</disclaimer>
+		<license>GNU GPL v3</license>
+		<platform>all</platform>
+	</extension>
+</addon>
+
+<addon id="script.module.urlresolver" name="URLResolver" version="2.10.13" provider-name="Eldorado">
+	<requires>
+		<import addon="xbmc.python" version="2.1.0" />
+	</requires>
+	<extension point="xbmc.python.module" library="lib" />
+	<extension point="xbmc.python.pluginsource" library="default.py" />
+	<extension point="xbmc.addon.metadata">
+		<platform>all</platform>
+		<summary lang="en">Resolve common video host URL's to be playable in XBMC/Kodi.</summary>
+		<description lang="en">Resolve common video host URL's to be playable in XBMC/Kodi, simplify addon development of video plugins requiring multi video hosts.</description>
+	</extension>
+</addon>
+</addons>
+>>>>>>> origin/master
